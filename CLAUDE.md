@@ -1,0 +1,99 @@
+# CLAUDE.md · Deepa Quest
+
+## What this is
+A mobile-first web game that teaches why Diwali is celebrated across India and the world.
+The player travels a map of 13 places. Each place = story panels → mission → one quick mini-game
+→ 0–3 stars → a collectible "lamp card" fact. Playable in 8 languages: English, हिन्दी, ਪੰਜਾਬੀ,
+বাংলা, தமிழ், ગુજરાતી, नेपाली, Bahasa Melayu. Hosted on GitHub Pages.
+
+**Mid-migration to SolidJS.** Read `openspec/changes/migrate-to-solidjs/` (design.md, tasks.md)
+before touching screens. Some screens are Solid components; the rest are still in `src/legacy/`.
+
+## Golden rules
+1. Stack: Vite + SolidJS + TypeScript. Build with `npm run build` → static `dist/`. No other frameworks.
+2. No third-party requests at runtime: no CDNs, web fonts, images, audio or analytics. Sound = Web Audio (`sfx`).
+3. **No emoji, anywhere.** Art = the SVG path icon set `IC` (`src/core/icons.js`) + CSS + canvas.
+   `npm test` scans the build for emoji.
+4. Mobile first: 360–430px portrait, touch, safe-area insets. Desktop shows a centred phone frame.
+5. Fast: one animation loop via `G.loop`, canvas sprites cached by `sprite()`/`spr()`, no DOM creation
+   inside canvas loops, no Solid re-renders driven by game frames. Budget: ~70 KB gzipped total.
+6. Cultural accuracy beats features. Every story line, quiz answer and card fact must be checkable.
+   Where traditions differ, write "in many tellings". Stay respectful to every faith and region.
+   Translations need a native-speaker review before they are treated as final.
+7. Tap targets ≥ 44px. Respect `prefers-reduced-motion`. Keyboard works (arrows, Space, Enter, Esc).
+8. Spec first: behaviour changes go through OpenSpec (below). `openspec/specs/` is the source of truth.
+
+## Commands
+| | |
+|---|---|
+| `npm install` | once, Node 20.19+ |
+| `npm run dev` | dev server with hot reload (http://localhost:5173) |
+| `npm run build` | type-check (`tsc`) and build to `dist/` |
+| `npm test` | build, then `scripts/smoke.cjs`: plays all 13 levels and 8 languages headlessly; fails on console errors, missing translations, emoji, broken pause. Needs Playwright + Chromium. `SHOTS=dir` saves screenshots. |
+| `npm run spec:validate` | `openspec validate --all --strict` |
+
+## OpenSpec workflow
+- `openspec/specs/<capability>/spec.md` = current behaviour: journey, mini-games, localization,
+  visual-assets, persistence, accessibility, delivery.
+- New work: `/opsx:propose "<idea>"` (or `openspec new change <name>`) → proposal, delta specs, design, tasks.
+- Build it: `/opsx:apply`, ticking `tasks.md` as you go, one commit per task group.
+- Done: `openspec archive <name>` merges the deltas into `openspec/specs/`.
+- `openspec/config.yaml` holds project constraints that every proposal must respect.
+
+## File map
+```
+index.html              Vite entry: app shell markup only
+src/main.tsx            boot: icons, mount Solid screens, start legacy screens
+src/styles.css          all styles
+src/ui/                 Solid components: Icon, Title; bridge.ts (temporary refreshUI/ui/tr signal)
+src/legacy/screens.js   screens not yet migrated, screen state, global listeners, ?debug hook
+src/game/engines.js     E[type] mini-game engines + field/rel/segDist/keys
+src/core/               util, icons (IC, ic, stars, sprite, spr), save, i18n (t, getTL/setTL, X, lgOf, gcfg),
+                        audio (sfx, buzz), fx (particles), clock (G, HUD, pop, flash, shakeEl, makeCanvas)
+src/data/               strings.js (LN, U), levels.js (PRO, LV)
+scripts/smoke.cjs       headless smoke test
+openspec/               specs, changes, config
+.github/workflows/      build, validate, deploy to Pages
+```
+
+## Migrating a screen to Solid (tasks.md group 5)
+1. Write `src/ui/<Screen>.tsx`; keep the element ids the smoke test uses.
+2. Read legacy state through `ui()` / `tr()` until `save` becomes a store.
+3. Mount it once in `main.tsx`; reduce the legacy `go<Screen>()` to show-section + `refreshUI()`.
+4. `npm test`, tick the task, commit.
+
+## Level schema (`LV[]` in `src/data/levels.js`)
+`{id, name, where, icon, color, deco, chap?, ll?, sbg, gbg, gdeco?, story:[[[iconNames…], text]…], mission, goalText, game:{type, …cfg}, card:[icon, title, fact], tr?}`
+- `id` is the save key. Never rename a shipped id (players would lose their stars).
+- Icons are `IC` names. `chap` is a `U` key (`ch1`…`ch5`).
+- `ll` = the place's own language(s), offered as a story toggle (English ⇄ UI language ⇄ `ll`).
+- `tr[lang] = {n, w, s:[panel texts], m, g, u?, c:[title, fact], x?}`; missing fields fall back to English.
+  `x` translates game content in the same order as the English cfg.
+- Unlocking is linear: level i opens when level i−1 has ≥ 1 star.
+
+## Engine contract
+`E[type] = (stage, cfg, done) => { … }`. Build UI inside `field(stage, cssClass)`. Never add listeners
+to stage or window directly; use `keys(fn)`. Time everything with `G.now()` / `G.loop()`. All text via `t()`.
+Call `done({stars, line})` exactly once. Engines stay imperative; Solid only mounts them.
+
+| type | used by | cfg |
+|---|---|---|
+| tap | Ayodhya, Amritsar | good, bad? (icon names), badRate?, dim?, goal, time, spawn, min, accel, life, unit |
+| shield | Govardhan | time |
+| swipe | Pawapuri | cards: [icon, statement, 1 or 0, explanation] |
+| rhythm | Kolkata | none |
+| slash | Goa & Tamil Nadu | goal, time |
+| rangoli | Gujarat | none |
+| quiz | Nepal, Finale | per, order?, pick?, items: [question, 4 answers (correct first), explanation] |
+| runner | Kala Pani | time |
+| simon | Trinidad | goal |
+| memory | Malaysia & Singapore | pairs: [word, meaning] |
+| lights | Leicester | none |
+
+## Save
+localStorage `deepa-quest-v2` = `{stars:{levelId:0-3}, snd, hap, seen, lang, big}`. Breaking change → bump `KEY`.
+
+## Deploy
+Push to `main`. `.github/workflows/deploy.yml` validates specs, builds and publishes `dist/`.
+One-time setup: GitHub → Settings → Pages → Source: **GitHub Actions**.
+Live at https://harshdeepkanhai.github.io/deepavali/
