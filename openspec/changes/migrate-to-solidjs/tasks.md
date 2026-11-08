@@ -24,9 +24,9 @@
 
 ## 4. Deploy and docs
 
-- [ ] 4.1 `.github/workflows/deploy.yml`: install, build, `openspec validate --all --strict`, publish Pages
-- [ ] 4.2 Update `CLAUDE.md` and add `README.md` for the new structure and commands
-- [ ] 4.3 Verify: workflow file is valid YAML and the build it runs passes locally
+- [x] 4.1 `.github/workflows/deploy.yml`: install, build, `openspec validate --all --strict`, publish Pages
+- [x] 4.2 Update `CLAUDE.md` and add `README.md` for the new structure and commands
+- [x] 4.3 Verify: workflow file is valid YAML and the build it runs passes locally
 
 ## 5. Migrate remaining screens (one commit each)
 
