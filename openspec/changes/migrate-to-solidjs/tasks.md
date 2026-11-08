@@ -2,19 +2,19 @@
 
 ## 1. Toolchain
 
-- [ ] 1.1 Add Vite, vite-plugin-solid, TypeScript and solid-js; add `vite.config.ts` (base `./`) and `tsconfig.json` (Solid JSX, allowJs)
-- [ ] 1.2 Turn `index.html` into the Vite entry: static markup plus `<script type="module" src="/src/main.tsx">`
-- [ ] 1.3 Verify: `npm run build` succeeds and `dist/` contains only same-origin files
+- [x] 1.1 Add Vite, vite-plugin-solid, TypeScript and solid-js; add `vite.config.ts` (base `./`) and `tsconfig.json` (Solid JSX, allowJs)
+- [x] 1.2 Turn `index.html` into the Vite entry: static markup plus `<script type="module" src="/src/main.tsx">`
+- [x] 1.3 Verify: `npm run build` succeeds and `dist/` contains only same-origin files
 
 ## 2. Split the single script into modules (no behaviour change)
 
-- [ ] 2.1 `src/styles.css` from the inline `<style>`
-- [ ] 2.2 `src/data/strings.js` (LN, U) and `src/data/levels.js` (PRO, LV)
-- [ ] 2.3 `src/core/`: `util`, `icons`, `save`, `i18n` (TL behind getTL/setTL), `audio`, `fx`, `clock` (G, HUD, pop, flash, shakeEl, burstAt, makeCanvas)
-- [ ] 2.4 `src/game/engines.js` with the eleven engines and their helpers
-- [ ] 2.5 `src/legacy/screens.js` with all screens, screen state and global listeners
-- [ ] 2.6 `?debug` test hook (`window.DQ`) and `scripts/smoke.cjs` checked into the repo
-- [ ] 2.7 Verify: smoke test plays all 13 levels, 8 languages, pause and tab-hide with zero console errors; emoji scan of `dist/` is empty
+- [x] 2.1 `src/styles.css` from the inline `<style>`
+- [x] 2.2 `src/data/strings.js` (LN, U) and `src/data/levels.js` (PRO, LV)
+- [x] 2.3 `src/core/`: `util`, `icons`, `save`, `i18n` (TL behind getTL/setTL), `audio`, `fx`, `clock` (G, HUD, pop, flash, shakeEl, burstAt, makeCanvas)
+- [x] 2.4 `src/game/engines.js` with the eleven engines and their helpers
+- [x] 2.5 `src/legacy/screens.js` with all screens, screen state and global listeners
+- [x] 2.6 `?debug` test hook (`window.DQ`) and `scripts/smoke.cjs` checked into the repo
+- [x] 2.7 Verify: smoke test plays all 13 levels, 8 languages, pause and tab-hide with zero console errors; emoji scan of `dist/` is empty
 
 ## 3. First Solid screen: title
 
