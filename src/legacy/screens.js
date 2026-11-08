@@ -9,7 +9,8 @@ import {fxSize,confetti} from '../core/fx.js';
 import {G,HUD} from '../core/clock.js';
 import {PRO,LV} from '../data/levels.js';
 import {E} from '../game/engines.js';
-export function setUI(){setTL(save.lang);document.documentElement.lang=save.lang;document.documentElement.classList.toggle('big',!!save.big);$('#g-pause').innerHTML=ic('pause');$('#g-pause').setAttribute('aria-label',t('paused'))}
+import {refreshUI} from '../ui/bridge';
+export function setUI(){setTL(save.lang);document.documentElement.lang=save.lang;document.documentElement.classList.toggle('big',!!save.big);$('#g-pause').innerHTML=ic('pause');$('#g-pause').setAttribute('aria-label',t('paused'));refreshUI()}
 /* ===================== SCREENS ===================== */
 export let screen='',cur={L:null,i:0,p:0,lg:'en'},justUnlocked=-1,mapW=0,albumBack='map',escFn=null,storyGo=()=>{};
 export const unlocked=i=>i===0||(save.stars[LV[i-1].id]||0)>0;
@@ -20,18 +21,15 @@ export function closeModal(){const m=$('#modal');m.classList.remove('on');m.inne
 export function toast(t){const e=h('div','toast',t);e.setAttribute('role','status');app.appendChild(e);setTimeout(()=>e.remove(),2300)}
 export const onOff=(k,v)=>`${t(k)}: <b>${t(v?'on':'off')}</b>`;
 
-export function goTitle(){G.reset();closeModal();setTL(save.lang);show('s-title');const started=Object.keys(save.stars).length>0;
- $('#s-title').innerHTML=`<div class="sky"></div><div class="tc"><div class="hero">${ic('diya')}</div><h1 class="logo">Deepa Quest</h1><p class="tag">${t('tag')}</p>
- <div class="stack"><button class="btn pri" id="tp">${ic('play')}${t(started?'cont':'begin')}</button><button class="btn" id="ta">${ic('book')}${t('album')}</button>
- <button class="btn" id="tl">${ic('globeL')}<span>${t('lang')}: <b lang="${save.lang}">${LN[save.lang]}</b></span></button>
- <div class="row"><button class="btn" id="ts" aria-pressed="${save.snd}">${ic(save.snd?'sndOn':'sndOff')}${t('sound')}</button><button class="btn" id="th" aria-pressed="${save.hap}">${ic(save.hap?'vib':'vibOff')}${t('vib')}</button></div></div>
- <p class="foot">${t('foot')}</p></div>`;
- $('#tp').onclick=()=>{actx();sfx.good();if(!save.seen){save.seen=true;persist();openStory(PRO,-1)}else goMap()};
- $('#ta').onclick=()=>goAlbum('title');
- $('#tl').onclick=()=>{sfx.tap();pickLang(goTitle)};
- $('#ts').onclick=()=>{save.snd=!save.snd;persist();goTitle();sfx.tap()};
- $('#th').onclick=()=>{save.hap=!save.hap;persist();buzz(30);goTitle()};
-}
+/* Title screen is a Solid component (src/ui/Title.tsx); this only shows it. */
+export function goTitle(){G.reset();closeModal();setTL(save.lang);show('s-title');refreshUI()}
+export const titleActions={
+ onPlay:()=>{actx();sfx.good();if(!save.seen){save.seen=true;persist();openStory(PRO,-1)}else goMap()},
+ onAlbum:()=>goAlbum('title'),
+ onLanguage:()=>{sfx.tap();pickLang(goTitle)},
+ onToggleSound:()=>{save.snd=!save.snd;persist();refreshUI();sfx.tap()},
+ onToggleHaptics:()=>{save.hap=!save.hap;persist();buzz(30);refreshUI()}
+};
 export function pickLang(back){const ks=Object.keys(LN);
  modal(`<div class="mcard"><div class="rt">${t('langT')}</div><div class="stack" id="lgs" style="margin-top:16px">${ks.map(l=>`<button class="btn${l===save.lang?' sel':''}" data-l="${l}" lang="${l}">${LN[l]}${l===save.lang?ic('check'):''}</button>`).join('')}<button class="btn ghost" id="lc">${t('close')}</button></div></div>`,closeModal);
  $('#lgs').onclick=e=>{const b=e.target.closest('[data-l]');if(b){save.lang=b.dataset.l;persist();setUI();sfx.tap();closeModal();back()}else if(e.target.closest('#lc'))closeModal()}}

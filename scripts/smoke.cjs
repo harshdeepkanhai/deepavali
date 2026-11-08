@@ -37,6 +37,12 @@ function emojiScan(dir) {
     const wait = ms => pg.waitForTimeout(ms);
 
     await pg.goto(URL); await wait(400); await shot('01-title');
+    // Solid title: toggling sound must update the same button in place, not rebuild it
+    const before = await pg.$eval('#ts', e => { window.__ts = e; return e.getAttribute('aria-pressed'); });
+    await pg.click('#ts');
+    const [same, after] = await pg.evaluate(() => { const e = document.querySelector('#ts'); return [e === window.__ts, e.getAttribute('aria-pressed')]; });
+    if (!same || after === before) fail.push('title sound toggle did not update in place');
+    await pg.click('#ts');
     await pg.click('#tp'); await wait(300); await shot('02-prologue');
     for (let k = 0; k < 4; k++) { await pg.click('#sn'); await wait(150); }
     await wait(300); await shot('03-map');

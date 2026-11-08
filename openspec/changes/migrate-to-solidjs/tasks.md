@@ -18,9 +18,9 @@
 
 ## 3. First Solid screen: title
 
-- [ ] 3.1 `src/ui/Icon.tsx` and `src/ui/bridge.ts` (version signal)
-- [ ] 3.2 `src/ui/Title.tsx` replaces the title template; legacy `goTitle` only shows the section and refreshes
-- [ ] 3.3 Verify: title renders in all 8 languages, sound and vibration toggles update in place, smoke test passes
+- [x] 3.1 `src/ui/Icon.tsx` and `src/ui/bridge.ts` (version signal)
+- [x] 3.2 `src/ui/Title.tsx` replaces the title template; legacy `goTitle` only shows the section and refreshes
+- [x] 3.3 Verify: title renders in all 8 languages, sound and vibration toggles update in place, smoke test passes
 
 ## 4. Deploy and docs
 
