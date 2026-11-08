@@ -1,0 +1,27 @@
+{
+  "name": "deepa-quest",
+  "private": true,
+  "version": "2.0.0",
+  "description": "A mobile-first game about why Diwali is celebrated across India and the world.",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "test": "node scripts/smoke.cjs",
+    "spec:list": "openspec list --specs",
+    "spec:validate": "openspec validate --all --strict"
+  },
+  "engines": {
+    "node": ">=20.19"
+  },
+  "dependencies": {
+    "solid-js": "^1.9.18"
+  },
+  "devDependencies": {
+    "@fission-ai/openspec": "^1.16.1",
+    "typescript": "^5.9.3",
+    "vite": "^8.3.6",
+    "vite-plugin-solid": "^2.11.15"
+  }
+}

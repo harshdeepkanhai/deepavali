@@ -1,0 +1,20 @@
+schema: spec-driven
+
+context: |
+  Deepa Quest is a mobile-first educational web game about why Diwali is celebrated
+  across India and the world, deployed as a static site on GitHub Pages.
+  Hard constraints:
+  - Works fully offline after load; no third-party network requests (no CDNs, web fonts, analytics).
+  - No emoji anywhere: all art is the in-repo SVG path icon set, CSS and canvas.
+  - Cultural accuracy beats features; contested traditions are written "in many tellings".
+  - Eight languages (en, hi, pa, bn, ta, gu, ne, ms); new player-facing text needs all eight
+    or an explicit English fallback noted in the change.
+  - Save data lives in localStorage key deepa-quest-v2; level ids are save keys and never change.
+  - 360-430px portrait first, 44px tap targets, prefers-reduced-motion respected.
+
+rules:
+  proposal:
+    - State what is out of scope.
+    - Say whether the change touches save data or level ids.
+  tasks:
+    - Every task group ends with a verification step (build, smoke test, or manual check).
