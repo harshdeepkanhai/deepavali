@@ -4,7 +4,7 @@
 A mobile-first web game that teaches why Diwali is celebrated across India and the world.
 The player travels a map of 13 places. Each place = story panels → mission → one quick mini-game
 → 0–3 stars → a collectible "lamp card" fact. Playable in 8 languages: English, हिन्दी, ਪੰਜਾਬੀ,
-বাংলা, தமிழ், ગુજરાતી, नेपाली, Bahasa Melayu. Hosted on GitHub Pages.
+বাংলা, தமிழ், ગુજરાતી, नेपाली, Bahasa Melayu. Hosted on Render (game + Go server + PostgreSQL).
 
 **Open changes** (read their design.md and tasks.md before touching that area):
 - `migrate-to-solidjs`: screens move to Solid one at a time; the rest are still in `src/legacy/`.
