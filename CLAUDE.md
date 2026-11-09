@@ -9,7 +9,7 @@ The player travels a map of 13 places. Each place = story panels → mission →
 **Open changes** (read their design.md and tasks.md before touching that area):
 - `migrate-to-solidjs`: screens move to Solid one at a time; the rest are still in `src/legacy/`.
 - `add-accounts-and-cloud-save`: Go server, passkeys, cloud save, hardening, Render deploy.
-- `build-3d-vertical-world`: 3D journey with three.js; blocked on choosing an asset pack.
+- `build-3d-vertical-world`: 3D vertical journey and 3D runner with three.js; art built in code for now.
 
 ## Golden rules
 1. Stack: Vite + SolidJS + TypeScript for the game; Go (standard library + go-webauthn + pgx) for `server/`;

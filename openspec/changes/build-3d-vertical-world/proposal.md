@@ -10,7 +10,8 @@ The flat icon map and 2D games feel small next to the stories they tell. A portr
 - Kala Pani becomes a 3D lane runner, the first 3D mini-game. The other games keep their current form and are migrated one at a time later.
 - Self-hosted, openly licensed 3D models and textures (glTF/GLB) are allowed, each recorded in a credits manifest. Emoji stay banned. Nothing loads from other sites.
 - three.js renders the 3D scenes and loads only after the title screen, so first load stays small.
-- A "Simple graphics" setting and automatic fallback to the current 2D map when WebGL is missing, the device is slow, or reduced motion is requested.
+- Jyoti, the lamp spirit, floats at the player's current place and flies to each newly unlocked place; a row of diyas along the path lights up as places are completed.
+- A "3D world" setting and automatic fallback to the current 2D map when WebGL is missing, the device is slow, or reduced motion is requested.
 
 Out of scope: converting all eleven games to 3D, multiplayer, character customisation, the account system (`add-accounts-and-cloud-save`).
 
@@ -28,4 +29,4 @@ Save data and level ids are unchanged.
 
 - Dependency: `three` (lazy-loaded chunk). Assets under `public/models/` with `public/models/CREDITS.md`.
 - Bundle: initial download unchanged (about 70 KB gzipped); the 3D chunk and each chapter's models load on demand.
-- Blocked on choosing an asset pack (see design.md).
+- Starts with low-poly art built in code (no files), so nothing waits on an asset pack; licensed models can replace pieces later (design.md, decision 3).
