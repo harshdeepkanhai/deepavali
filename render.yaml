@@ -1,0 +1,27 @@
+# Render Blueprint: Dashboard -> New -> Blueprint -> choose this repository.
+# Render builds the Dockerfile itself, so no GitHub Actions minutes are needed to deploy.
+services:
+  - type: web
+    name: deepa-quest
+    runtime: docker
+    plan: free # sleeps after 15 idle minutes; switch to starter for real players
+    region: singapore # closest Render region to India
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /up
+    autoDeploy: true # every push to the default branch; a failing build keeps the old version live
+    envVars:
+      - key: PUBLIC_ORIGIN # e.g. https://deepa-quest.onrender.com or your own domain, no trailing slash
+        sync: false
+      - key: CLIENT_IP_HEADER # set by Render's Cloudflare edge; clients cannot forge it
+        value: CF-Connecting-IP
+      - key: DATABASE_URL
+        fromDatabase:
+          name: deepa-quest-db
+          property: connectionString
+
+databases:
+  - name: deepa-quest-db
+    plan: basic-256mb # free databases are deleted after 30 days
+    region: singapore
+    postgresMajorVersion: "18" # cannot be changed later
+    ipAllowList: [] # no connections from the internet: only the web service, over Render's private network

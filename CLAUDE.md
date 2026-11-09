@@ -4,14 +4,18 @@
 A mobile-first web game that teaches why Diwali is celebrated across India and the world.
 The player travels a map of 13 places. Each place = story panels → mission → one quick mini-game
 → 0–3 stars → a collectible "lamp card" fact. Playable in 8 languages: English, हिन्दी, ਪੰਜਾਬੀ,
-বাংলা, தமிழ், ગુજરાતી, नेपाली, Bahasa Melayu. Hosted on GitHub Pages.
+বাংলা, தமிழ், ગુજરાતી, नेपाली, Bahasa Melayu. Hosted on Render (game + Go server + PostgreSQL).
 
-**Mid-migration to SolidJS.** Read `openspec/changes/migrate-to-solidjs/` (design.md, tasks.md)
-before touching screens. Some screens are Solid components; the rest are still in `src/legacy/`.
+**Open changes** (read their design.md and tasks.md before touching that area):
+- `migrate-to-solidjs`: screens move to Solid one at a time; the rest are still in `src/legacy/`.
+- `add-accounts-and-cloud-save`: Go server, passkeys, cloud save, hardening, Render deploy.
+- `build-3d-vertical-world`: 3D journey with three.js; blocked on choosing an asset pack.
 
 ## Golden rules
-1. Stack: Vite + SolidJS + TypeScript. Build with `npm run build` → static `dist/`. No other frameworks.
+1. Stack: Vite + SolidJS + TypeScript for the game; Go (standard library + go-webauthn + pgx) for `server/`;
+   PostgreSQL. No other frameworks.
 2. No third-party requests at runtime: no CDNs, web fonts, images, audio or analytics. Sound = Web Audio (`sfx`).
+   The CSP enforces this: scripts only from our origin, no inline scripts, no `eval`.
 3. **No emoji, anywhere.** Art = the SVG path icon set `IC` (`src/core/icons.js`) + CSS + canvas.
    `npm test` scans the build for emoji.
 4. Mobile first: 360–430px portrait, touch, safe-area insets. Desktop shows a centred phone frame.
@@ -22,6 +26,12 @@ before touching screens. Some screens are Solid components; the rest are still i
    Translations need a native-speaker review before they are treated as final.
 7. Tap targets ≥ 44px. Respect `prefers-reduced-motion`. Keyboard works (arrows, Space, Enter, Esc).
 8. Spec first: behaviour changes go through OpenSpec (below). `openspec/specs/` is the source of truth.
+9. Server security: passkeys only, no personal data, parameterised SQL only, strict JSON decoding,
+   never log tokens, codes, passkey material or client addresses, and never return internal error text
+   (use `a.internal(w, err)`). Responses must not name the server, framework or database.
+10. Level ids are save keys on the device **and** in `server/progress.go` (`levelIDs`). Keep both in sync.
+11. Offline: every build output file except `icons/` is precached as one version by `pwa/sw.js`.
+    Never cache `/api/`. Do not add lazily loaded chunks without versioning them the same way.
 
 ## Commands
 | | |
@@ -31,6 +41,9 @@ before touching screens. Some screens are Solid components; the rest are still i
 | `npm run build` | type-check (`tsc`) and build to `dist/` |
 | `npm test` | build, then `scripts/smoke.cjs`: plays all 13 levels and 8 languages headlessly; fails on console errors, missing translations, emoji, broken pause. Needs Playwright + Chromium. `SHOTS=dir` saves screenshots. |
 | `npm run spec:validate` | `openspec validate --all --strict` |
+| `cd server && go test ./...` | server unit tests; with `TEST_DATABASE_URL` also the migration test |
+| `node scripts/make-icons.cjs` | re-render the app icons in `public/icons/` after changing the diya |
+| `TEST_DATABASE_URL=... node scripts/e2e-accounts.cjs` | real server + PostgreSQL + Chromium virtual passkeys: 36 checks (UI, API, attacks). Throwaway database only. |
 
 ## OpenSpec workflow
 - `openspec/specs/<capability>/spec.md` = current behaviour: journey, mini-games, localization,
@@ -45,15 +58,23 @@ before touching screens. Some screens are Solid components; the rest are still i
 index.html              Vite entry: app shell markup only
 src/main.tsx            boot: icons, mount Solid screens, start legacy screens
 src/styles.css          all styles
-src/ui/                 Solid components: Icon, Title; bridge.ts (temporary refreshUI/ui/tr signal)
+src/ui/                 Solid components: Icon, Title, Account; bridge.ts (temporary refreshUI/ui/tr signal)
+src/net/                api.ts (passkey + account client), sync.ts (best-score cloud sync, signed-in hint)
 src/legacy/screens.js   screens not yet migrated, screen state, global listeners, ?debug hook
 src/game/engines.js     E[type] mini-game engines + field/rel/segDist/keys
 src/core/               util, icons (IC, ic, stars, sprite, spr), save, i18n (t, getTL/setTL, X, lgOf, gcfg),
                         audio (sfx, buzz), fx (particles), clock (G, HUD, pop, flash, shakeEl, makeCanvas)
 src/data/               strings.js (LN, U), levels.js (PRO, LV)
-scripts/smoke.cjs       headless smoke test
+scripts/smoke.cjs       headless smoke test (guest play with zero /api calls, offline play, installability)
+pwa/sw.js               service worker template; the build fills in the file list and version
+public/                 manifest.webmanifest and icons/ (rendered from the diya; the only raster images)
+scripts/e2e-accounts.cjs  account and attack tests against the real server
+server/                 Go server: httpx.go (headers, limits, errors), static.go, auth.go (passkeys,
+                        sessions, recovery), progress.go (cloud save, deletion), db.go + migrations/
 openspec/               specs, changes, config
-.github/workflows/      build, validate, deploy to Pages
+Dockerfile, render.yaml build and deploy on Render (distroless image, private PostgreSQL)
+.github/                CI (tests, spec validation, govulncheck, npm audit) and Dependabot
+SECURITY.md             reporting, controls, incident runbook
 ```
 
 ## Migrating a screen to Solid (tasks.md group 5)
@@ -94,6 +115,5 @@ Call `done({stars, line})` exactly once. Engines stay imperative; Solid only mou
 localStorage `deepa-quest-v2` = `{stars:{levelId:0-3}, snd, hap, seen, lang, big}`. Breaking change → bump `KEY`.
 
 ## Deploy
-Push to `main`. `.github/workflows/deploy.yml` validates specs, builds and publishes `dist/`.
-One-time setup: GitHub → Settings → Pages → Source: **GitHub Actions**.
-Live at https://harshdeepkanhai.github.io/deepavali/
+Render builds `Dockerfile` from the repository on every push (Blueprint: `render.yaml`).
+Set `PUBLIC_ORIGIN` to the live address once. See README.md and SECURITY.md.

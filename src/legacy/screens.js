@@ -10,6 +10,8 @@ import {G,HUD} from '../core/clock.js';
 import {PRO,LV} from '../data/levels.js';
 import {E} from '../game/engines.js';
 import {refreshUI} from '../ui/bridge';
+import {openAccount} from '../ui/Account';
+import {syncSoon,onStarsChanged} from '../net/sync';
 export function setUI(){setTL(save.lang);document.documentElement.lang=save.lang;document.documentElement.classList.toggle('big',!!save.big);$('#g-pause').innerHTML=ic('pause');$('#g-pause').setAttribute('aria-label',t('paused'));refreshUI()}
 /* ===================== SCREENS ===================== */
 export let screen='',cur={L:null,i:0,p:0,lg:'en'},justUnlocked=-1,mapW=0,albumBack='map',escFn=null,storyGo=()=>{};
@@ -34,6 +36,8 @@ export function pickLang(back){const ks=Object.keys(LN);
  modal(`<div class="mcard"><div class="rt">${t('langT')}</div><div class="stack" id="lgs" style="margin-top:16px">${ks.map(l=>`<button class="btn${l===save.lang?' sel':''}" data-l="${l}" lang="${l}">${LN[l]}${l===save.lang?ic('check'):''}</button>`).join('')}<button class="btn ghost" id="lc">${t('close')}</button></div></div>`,closeModal);
  $('#lgs').onclick=e=>{const b=e.target.closest('[data-l]');if(b){save.lang=b.dataset.l;persist();setUI();sfx.tap();closeModal();back()}else if(e.target.closest('#lc'))closeModal()}}
 
+/* Account screen is a Solid component (src/ui/Account.tsx). */
+export function goAccount(){G.reset();closeModal();setTL(save.lang);show('s-account');refreshUI();openAccount()}
 export function goMap(){G.reset();closeModal();setTL(save.lang);show('s-map');renderMap()}
 export function renderMap(){
  const S=$('#s-map');setTL(save.lang);
@@ -99,7 +103,7 @@ export function pauseMenu(){if(screen!=='s-game'||$('#modal').classList.contains
  draw()}
 export function showResult(L,i,res){
  const prev=save.stars[L.id]||0,win=res.stars>0,first=win&&!prev,last=i===LV.length-1,x=X(L,cur.lg),nx=LV[i+1];
- if(win&&res.stars>prev){save.stars[L.id]=res.stars;persist()}
+ if(win&&res.stars>prev){save.stars[L.id]=res.stars;persist();syncSoon()}
  if(first&&!last)justUnlocked=i+1;
  modal(`<div class="mcard"><div class="rt">${win?t('win'):t('close2')}</div><div class="rst">${ic('star')}${ic('star')}${ic('star')}</div><div class="rl">${res.line}</div>
  ${win?`<div class="fc"><span class="fe">${ic(L.card[0])}</span><div><h4>${first?`<em>${t('newCard')}</em>`:''}${x.c[0]}</h4><p>${x.c[1]}</p></div></div>${first&&nx?`<p class="unl">${ic('sparkle')}${t('unl',{n:nameOf(nx)})}</p>`:''}`:`<p class="rf">${t('fail')}</p>`}
@@ -125,11 +129,13 @@ export function goAlbum(from){G.reset();closeModal();setTL(save.lang);albumBack=
 }
 export function settings(){setTL(save.lang);modal(`<div class="mcard"><div class="rt">${t('settings')}</div><div class="stack" style="margin-top:16px">
  <button class="btn" id="xl">${ic('globeL')}<span>${t('lang')}: <b lang="${save.lang}">${LN[save.lang]}</b></span></button>
+ <button class="btn" id="xa">${ic('key')}${t('acT')}</button>
  <button class="btn" id="xs">${ic(save.snd?'sndOn':'sndOff')}<span>${onOff('sound',save.snd)}</span></button>
  <button class="btn" id="xh">${ic(save.hap?'vib':'vibOff')}<span>${onOff('vib',save.hap)}</span></button>
  <button class="btn" id="xb">${ic('text')}<span>${onOff('bigtx',save.big)}</span></button>
  <button class="btn" id="xp">${ic('moon')}${t('prologue')}</button><button class="btn" id="xr">${ic('restart')}${t('reset')}</button><button class="btn pri" id="xc">${t('done')}</button></div></div>`,closeModal);
  $('#xl').onclick=()=>pickLang(()=>{renderMap();settings()});
+ $('#xa').onclick=()=>{sfx.tap();goAccount()};
  $('#xs').onclick=()=>{save.snd=!save.snd;persist();settings();sfx.tap()};
  $('#xh').onclick=()=>{save.hap=!save.hap;persist();buzz(30);settings()};
  $('#xb').onclick=()=>{save.big=!save.big;persist();setUI();renderMap();settings()};
@@ -149,11 +155,13 @@ addEventListener('keydown',e=>{const btn=e.target&&e.target.closest&&e.target.cl
  if($('#modal').classList.contains('on')){if(e.key==='Escape'&&escFn){e.preventDefault();escFn()}return}
  if(screen==='s-story'&&cur.L&&cur.p<cur.L.story.length){if(e.key==='ArrowRight'||(!btn&&(e.key===' '||e.key==='Enter'))){e.preventDefault();storyGo(1)}else if(e.key==='ArrowLeft')storyGo(-1);else if(e.key==='Escape')goMap()}
  else if(screen==='s-game'&&(e.key==='Escape'||e.key==='p'))pauseMenu();
+ else if(screen==='s-account'&&e.key==='Escape')goMap();
  else if((screen==='s-map'||screen==='s-album')&&e.key==='Escape')screen==='s-album'&&albumBack==='title'?goTitle():screen==='s-album'?goMap():goTitle()});
 app.addEventListener('contextmenu',e=>e.preventDefault());
 document.addEventListener('pointerdown',()=>actx(),{once:true});
 $('#g-pause').onclick=pauseMenu;
 setUI();fxSize();goTitle();
+onStarsChanged(()=>{if(screen==='s-map')renderMap();refreshUI()});syncSoon();
 }
 /* test hook: only with ?debug in the URL */
 if(new URLSearchParams(location.search).has('debug'))window.DQ={LV,PRO,U,LN,E,G,save,persist,setUI,renderMap,openStory,startGame,showResult,finale,goAlbum,goMap,goTitle,settings,closeModal,cur:()=>cur};

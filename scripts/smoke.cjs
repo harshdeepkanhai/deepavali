@@ -2,12 +2,13 @@
  * Smoke test for Deepa Quest. Run with `npm test` (builds first).
  * Serves dist/ with `vite preview`, drives every screen through the ?debug hook (window.DQ),
  * and fails on any console error, missing translation, misaligned story translation,
- * failed auto-pause, or emoji in the build.
+ * failed auto-pause, emoji in the build, broken offline play or failed installability.
  * Needs Playwright with Chromium available (`require('playwright')`).
  * Set SHOTS=<dir> to save screenshots.
  */
 const { spawn } = require('node:child_process');
 const fs = require('node:fs');
+const os = require('node:os');
 const path = require('node:path');
 const { chromium } = require('playwright');
 
@@ -23,6 +24,62 @@ function emojiScan(dir) {
   }
 }
 
+// Offline play, instant repeat loads and installability. Uses a normal (non-incognito) profile,
+// because Chromium refuses installability checks in incognito windows.
+async function offlineAndInstall() {
+  const profile = fs.mkdtempSync(path.join(os.tmpdir(), 'dq-pwa-'));
+  const ctx = await chromium.launchPersistentContext(profile, { viewport: { width: 375, height: 667 } });
+  try {
+    const page = ctx.pages()[0] || await ctx.newPage();
+    const errors = [];
+    page.on('pageerror', e => errors.push(e.message));
+    await page.goto(URL);
+    await page.evaluate(() => navigator.serviceWorker.ready.then(() => true));
+    await page.reload();
+    if (!(await page.evaluate(() => !!navigator.serviceWorker.controller))) fail.push('service worker does not control the page');
+
+    // Second launch: page, script and styles must come from the device. Both the page's own
+    // requests and any download the service worker makes on its behalf count as network.
+    const fromNetwork = [];
+    const onResponse = r => { const t = r.request().resourceType(); if (['document', 'script', 'stylesheet'].includes(t) && !r.fromServiceWorker()) fromNetwork.push('page: ' + r.url()); };
+    const onWorkerRequest = r => { if (r.serviceWorker() && !r.url().endsWith('/sw.js')) fromNetwork.push('worker: ' + r.url()); };
+    page.on('response', onResponse);
+    ctx.on('request', onWorkerRequest);
+    await page.reload();
+    await page.waitForSelector('#tp');
+    page.off('response', onResponse);
+    ctx.off('request', onWorkerRequest);
+    if (fromNetwork.length) fail.push(`second launch downloaded shell files again: ${fromNetwork.join(', ')}`);
+
+    // Flight mode: the game opens and a level plays.
+    await ctx.setOffline(true);
+    await page.reload();
+    await page.waitForSelector('#tp');
+    await page.evaluate(() => { const D = window.DQ; D.save.seen = true; D.openStory(D.LV[0], 0); D.startGame(D.LV[0], 0); });
+    await page.waitForTimeout(2500);
+    const playing = await page.evaluate(() => window.DQ.cur().L.id === 'ayodhya' && document.querySelectorAll('#g-stage .tgt').length > 0);
+    if (!playing) fail.push('offline: the first level did not start');
+    await page.evaluate(() => { const D = window.DQ; D.G.reset(); D.showResult(D.LV[0], 0, { stars: 2, line: 'offline' }); });
+    if ((await page.evaluate(() => JSON.parse(localStorage.getItem('deepa-quest-v2')).stars.ayodhya)) !== 2) fail.push('offline: stars were not saved on the device');
+    await ctx.setOffline(false);
+    if (errors.length) fail.push(`offline page errors: ${errors.join(' | ')}`);
+
+    // Installable, and nothing but the shell in the offline cache.
+    const cdp = await ctx.newCDPSession(page);
+    const { installabilityErrors } = await cdp.send('Page.getInstallabilityErrors');
+    if (installabilityErrors.length) fail.push(`not installable: ${installabilityErrors.map(e => e.errorId).join(', ')}`);
+    const cached = await page.evaluate(async () => {
+      const out = [];
+      for (const k of await caches.keys()) for (const r of await (await caches.open(k)).keys()) out.push(new URL(r.url).pathname);
+      return out;
+    });
+    if (!cached.includes('/') || cached.some(p => p.startsWith('/api/'))) fail.push(`unexpected offline cache: ${cached.join(', ')}`);
+  } finally {
+    await ctx.close();
+    fs.rmSync(profile, { recursive: true, force: true });
+  }
+}
+
 (async () => {
   emojiScan(path.join(root, 'dist'));
   const server = spawn('npx', ['vite', 'preview', '--port', String(PORT), '--strictPort'], { cwd: root, stdio: 'ignore' });
@@ -33,6 +90,8 @@ function emojiScan(dir) {
     const errs = [];
     pg.on('console', m => { if (m.type() === 'error') errs.push(m.text()); });
     pg.on('pageerror', e => errs.push('PAGEERR ' + e.message));
+    const apiCalls = [];
+    pg.on('request', r => { if (new globalThis.URL(r.url()).pathname.startsWith('/api/')) apiCalls.push(r.url()); });
     const shot = async n => { if (SHOTS) await pg.screenshot({ path: path.join(SHOTS, n + '.png') }); };
     const wait = ms => pg.waitForTimeout(ms);
 
@@ -91,9 +150,11 @@ function emojiScan(dir) {
       }
       return out;
     });
+    if (apiCalls.length) fail.push(`guest play called the server: ${apiCalls[0]}`);
     fail.push(...report, ...errs.map(e => 'console: ' + e));
     await browser.close();
+    await offlineAndInstall();
   } finally { server.kill(); }
   if (fail.length) { console.error('SMOKE FAILED\n- ' + fail.join('\n- ')); process.exit(1); }
-  console.log('Smoke test passed: 13 levels, 8 languages, pause, auto-pause, translations, no emoji, no console errors.');
+  console.log('Smoke test passed: 13 levels, 8 languages, pause, auto-pause, translations, offline play, instant reloads, installable, no emoji, no console errors.');
 })().catch(e => { console.error(e); process.exit(1); });

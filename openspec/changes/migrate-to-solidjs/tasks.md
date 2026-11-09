@@ -24,7 +24,7 @@
 
 ## 4. Deploy and docs
 
-- [x] 4.1 `.github/workflows/deploy.yml`: install, build, `openspec validate --all --strict`, publish Pages
+- [x] 4.1 `.github/workflows/deploy.yml`: install, build, `openspec validate --all --strict`, publish Pages (superseded: hosting moves to Render in `add-accounts-and-cloud-save`)
 - [x] 4.2 Update `CLAUDE.md` and add `README.md` for the new structure and commands
 - [x] 4.3 Verify: workflow file is valid YAML and the build it runs passes locally
 
