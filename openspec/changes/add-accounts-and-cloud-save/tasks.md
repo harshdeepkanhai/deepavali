@@ -42,7 +42,7 @@
 - [x] 6.1 Multi-stage Dockerfile: build web, build server (`-trimpath -s -w`), distroless non-root runtime
 - [x] 6.2 `render.yaml`: web service with health check, private Postgres (`ipAllowList: []`), generated secrets
 - [x] 6.3 CI workflow without Pages deploy: tests, spec validation, `govulncheck`, `npm audit`; Dependabot config
-- [ ] 6.4 `SECURITY.md`: reporting, supported versions, incident runbook
+- [x] 6.4 `SECURITY.md`: reporting, supported versions, incident runbook
 - [ ] 6.5 Verify: Docker image builds and serves the game; header scan shows no stack names
 
 ## 7. Close out
