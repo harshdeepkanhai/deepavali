@@ -7,4 +7,6 @@ export default defineConfig({
   base: './',
   plugins: [solid()],
   build: { target: 'es2020', assetsInlineLimit: 0 },
+  // `npm run dev` talks to a local Go server (see server/README.md)
+  server: { proxy: { '/api': 'http://localhost:8080' } },
 });

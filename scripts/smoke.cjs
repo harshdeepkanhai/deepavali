@@ -33,6 +33,8 @@ function emojiScan(dir) {
     const errs = [];
     pg.on('console', m => { if (m.type() === 'error') errs.push(m.text()); });
     pg.on('pageerror', e => errs.push('PAGEERR ' + e.message));
+    const apiCalls = [];
+    pg.on('request', r => { if (new globalThis.URL(r.url()).pathname.startsWith('/api/')) apiCalls.push(r.url()); });
     const shot = async n => { if (SHOTS) await pg.screenshot({ path: path.join(SHOTS, n + '.png') }); };
     const wait = ms => pg.waitForTimeout(ms);
 
@@ -91,6 +93,7 @@ function emojiScan(dir) {
       }
       return out;
     });
+    if (apiCalls.length) fail.push(`guest play called the server: ${apiCalls[0]}`);
     fail.push(...report, ...errs.map(e => 'console: ' + e));
     await browser.close();
   } finally { server.kill(); }

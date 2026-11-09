@@ -52,17 +52,85 @@ const PAGE_HELPERS = () => {
   };
 };
 
+// Drives the real account screen like a player: sign up on phone A, lose it, recover on phone B.
+async function uiFlow(browser) {
+  const ctx = await browser.newContext({ extraHTTPHeaders: { 'X-Test-Client': '198.51.100.2' }, viewport: { width: 375, height: 667 } });
+  const page = await ctx.newPage();
+  const errors = [];
+  page.on('pageerror', e => errors.push(e.message));
+  page.on('console', m => { if (m.type() === 'error') errors.push(m.text()); });
+  const cdp = await ctx.newCDPSession(page);
+  await cdp.send('WebAuthn.enable');
+  const opts = { protocol: 'ctap2', transport: 'internal', hasResidentKey: true, hasUserVerification: true, isUserVerified: true, automaticPresenceSimulation: true };
+  const phoneA = (await cdp.send('WebAuthn.addVirtualAuthenticator', { options: opts })).authenticatorId;
+  await page.goto(ORIGIN + '/?debug');
+  await page.evaluate(() => { const D = window.DQ; D.save.seen = true; D.save.stars = { ayodhya: 2 }; D.persist(); D.goMap(); D.settings(); });
+  await page.click('#xa');
+  await page.click('#ac-new');
+  await page.waitForSelector('#ac-codes li');
+  const codes = await page.$$eval('#ac-codes li', li => li.map(x => x.textContent));
+  check('UI: sign-up shows 10 recovery codes', codes.length === 10);
+  await page.click('#ac-saved');
+  await page.waitForSelector('#ac-name');
+  const name = (await page.textContent('#ac-name')).trim();
+  check('UI: signed in with a generated name', /\d{4}$/.test(name), name);
+  await page.waitForFunction(() => document.querySelector('#ac-sync')?.textContent.length > 0);
+  let cloud = await page.evaluate(() => fetch('/api/progress').then(r => r.json()));
+  check('UI: guest stars uploaded at sign-up', cloud.stars.ayodhya === 2, JSON.stringify(cloud));
+  await page.evaluate(() => { const D = window.DQ; D.G.reset(); D.showResult(D.LV[1], 1, { stars: 3, line: 'e2e' }); });
+  await page.waitForTimeout(1200);
+  cloud = await page.evaluate(() => fetch('/api/progress').then(r => r.json()));
+  check('UI: a new result syncs to the account', cloud.stars.braj === 3, JSON.stringify(cloud));
+
+  await page.evaluate(() => window.DQ.closeModal());
+  await page.evaluate(() => window.DQ.goMap());
+  await page.evaluate(() => window.DQ.settings());
+  await page.click('#xa');
+  await page.click('#ac-out');
+  await page.waitForSelector('#ac-new');
+  check('UI: sign out returns to guest view', true);
+
+  // phone A is lost; phone B has no passkey for this account
+  await cdp.send('WebAuthn.removeVirtualAuthenticator', { authenticatorId: phoneA });
+  await cdp.send('WebAuthn.addVirtualAuthenticator', { options: opts });
+  await page.evaluate(() => { localStorage.clear(); const D = window.DQ; D.save.stars = {}; D.persist(); });
+  // (A browser waits for the player to cancel when no passkey matches; virtual devices cannot cancel,
+  //  so the "no passkey here" case is covered by the API checks below instead.)
+  await page.fill('#ac-code', codes[0].toLowerCase());
+  await page.click('#ac-rec');
+  await page.waitForSelector('#ac-name');
+  check('UI: recovery code signs in on the new phone', (await page.textContent('#ac-name')).trim() === name);
+  await page.waitForFunction(() => window.DQ.save.stars.braj === 3);
+  check('UI: cloud stars come back to the new phone', await page.evaluate(() => window.DQ.save.stars.ayodhya === 2 && window.DQ.save.stars.braj === 3));
+  await page.click('#ac-add');
+  await page.waitForFunction(() => document.querySelector('#ac-msg')?.textContent.length > 0);
+  const me = await page.evaluate(() => fetch('/api/me').then(r => r.json()));
+  check('UI: new phone gets its own passkey', me.passkeys === 2 && me.codesLeft === 9, JSON.stringify(me));
+  await page.click('#ac-out');
+  await page.waitForSelector('#ac-in');
+  await page.click('#ac-in');
+  await page.waitForSelector('#ac-name');
+  check('UI: sign in with the new passkey', (await page.textContent('#ac-name')).trim() === name);
+  await page.click('#ac-del');
+  await page.click('#ac-del-yes');
+  await page.waitForSelector('#ac-new');
+  check('UI: delete account keeps local stars', await page.evaluate(() => window.DQ.save.stars.braj === 3));
+  check('UI: no console or page errors', errors.length === 0, errors.join(' | '));
+  await ctx.close();
+}
+
 (async () => {
   const bin = path.join(os.tmpdir(), 'dq-e2e-server');
   execFileSync('go', ['build', '-o', bin, '.'], { cwd: path.join(root, 'server'), stdio: 'inherit' });
   const logs = [];
-  const srv = spawn(bin, [], { env: { ...process.env, PORT: String(PORT), PUBLIC_ORIGIN: ORIGIN, DATABASE_URL: DB, STATIC_DIR: path.join(root, 'dist'), CLIENT_IP_HEADER: '' } });
+  const srv = spawn(bin, [], { env: { ...process.env, PORT: String(PORT), PUBLIC_ORIGIN: ORIGIN, DATABASE_URL: DB, STATIC_DIR: path.join(root, 'dist'), CLIENT_IP_HEADER: 'X-Test-Client' } });
   srv.stdout.on('data', d => logs.push(String(d))); srv.stderr.on('data', d => logs.push(String(d)));
   let browser;
   try {
     for (let i = 0; i < 50; i++) { try { await fetch(ORIGIN + '/up'); break; } catch { await new Promise(r => setTimeout(r, 200)); } }
     browser = await chromium.launch();
-    const ctx = await browser.newContext();
+    await uiFlow(browser);
+    const ctx = await browser.newContext({ extraHTTPHeaders: { 'X-Test-Client': '198.51.100.1' } });
     const page = await ctx.newPage();
     const errors = [];
     page.on('pageerror', e => errors.push(e.message));
