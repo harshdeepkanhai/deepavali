@@ -20,12 +20,12 @@ The game SHALL be delivered as a static bundle (HTML, scripts and styles only) p
 - **THEN** all scripts and styles load and the game runs
 
 ### Requirement: Automated deployment
-Every push to the main branch SHALL build the game, validate the specs, and publish the result to GitHub Pages only if both succeed.
+Every push to the main branch SHALL build the game and validate the specs, and the hosting platform SHALL publish the result only if both succeed.
 
 #### Scenario: Failing build
 - **WHEN** a push to main fails to build or fails spec validation
-- **THEN** the live site is not changed
+- **THEN** the live site keeps serving the previous version
 
 #### Scenario: Passing build
 - **WHEN** a push to main builds and validates successfully
-- **THEN** the new build is published to GitHub Pages
+- **THEN** the new version goes live
