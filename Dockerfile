@@ -1,5 +1,5 @@
 # 1. Build the game (and refuse to build if the specs are invalid).
-FROM node:22-bookworm-slim AS web
+FROM node:26-bookworm-slim AS web
 WORKDIR /src
 ENV OPENSPEC_TELEMETRY=0
 COPY package.json package-lock.json ./
