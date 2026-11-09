@@ -2,3 +2,5 @@ node_modules/
 dist/
 *.log
 .DS_Store
+# Go build output (go build in server/)
+/server/server
