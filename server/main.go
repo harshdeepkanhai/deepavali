@@ -27,6 +27,10 @@ func newApp(cfg config, log *slog.Logger, db *pgxpool.Pool) (*app, error) {
 	}
 	a := &app{cfg: cfg, log: log, db: db, files: files, api: http.NewServeMux(), lim: defaultLimiters()}
 	a.csp = a.buildCSP()
+	if a.wa, err = newWebAuthn(cfg); err != nil {
+		return nil, err
+	}
+	a.authRoutes()
 	return a, nil
 }
 

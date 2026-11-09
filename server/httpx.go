@@ -16,6 +16,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/go-webauthn/webauthn/webauthn"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"golang.org/x/time/rate"
 )
@@ -26,6 +27,7 @@ type app struct {
 	cfg   config
 	log   *slog.Logger
 	db    *pgxpool.Pool
+	wa    *webauthn.WebAuthn
 	files map[string]*asset
 	api   *http.ServeMux
 	lim   map[string]*limiter
