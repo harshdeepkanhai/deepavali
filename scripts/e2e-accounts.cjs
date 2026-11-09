@@ -63,7 +63,7 @@ async function uiFlow(browser) {
   await cdp.send('WebAuthn.enable');
   const opts = { protocol: 'ctap2', transport: 'internal', hasResidentKey: true, hasUserVerification: true, isUserVerified: true, automaticPresenceSimulation: true };
   const phoneA = (await cdp.send('WebAuthn.addVirtualAuthenticator', { options: opts })).authenticatorId;
-  await page.goto(ORIGIN + '/?debug');
+  await page.goto(ORIGIN + '/?debug&g3d=0');
   await page.evaluate(() => { const D = window.DQ; D.save.seen = true; D.save.stars = { ayodhya: 2 }; D.persist(); D.goMap(); D.settings(); });
   await page.click('#xa');
   await page.click('#ac-new');
@@ -198,7 +198,7 @@ async function uiFlow(browser) {
     const bad1 = await put({ stars: { ayodhya: 99 } }), bad2 = await put({ stars: { atlantis: 1 } }), bad3 = await put({ stars: { ayodhya: 2.5 } });
     const after = await T('call', 'GET', '/api/progress');
     check('tampered progress is rejected and nothing changes', [bad1, bad2, bad3].every(b => b.status === 400) && after.body.stars.ayodhya === 3 && Object.keys(after.body.stars).length === 2, JSON.stringify(after));
-    await page.goto(ORIGIN + '/?debug');
+    await page.goto(ORIGIN + '/?debug&g3d=0');
     await page.evaluate(PAGE_HELPERS);
     const allIds = await page.evaluate(() => window.DQ.LV.map(l => l.id));
     const full = await put({ stars: Object.fromEntries(allIds.map(id => [id, 3])) });
