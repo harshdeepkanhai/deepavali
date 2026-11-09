@@ -6,6 +6,7 @@ COPY package.json package-lock.json ./
 RUN npm ci --ignore-scripts --no-audit --no-fund
 COPY index.html vite.config.ts tsconfig.json ./
 COPY src ./src
+COPY public ./public
 COPY openspec ./openspec
 RUN npx openspec validate --all --strict && npm run build
 

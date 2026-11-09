@@ -2,9 +2,9 @@
 
 ## 1. Install support
 
-- [ ] 1.1 `scripts/make-icons.cjs` renders the diya from the icon set into 192, 512, maskable 512 and Apple 180 PNGs
-- [ ] 1.2 `public/manifest.webmanifest`; manifest, Apple icon and title tags in `index.html`
-- [ ] 1.3 Server: manifest MIME type; Dockerfile copies `public/`
+- [x] 1.1 `scripts/make-icons.cjs` renders the diya from the icon set into 192, 512, maskable 512 and Apple 180 PNGs
+- [x] 1.2 `public/manifest.webmanifest`; manifest, Apple icon and title tags in `index.html`
+- [x] 1.3 Server: manifest MIME type; Dockerfile copies `public/`
 - [ ] 1.4 Verify: Chromium reports no installability errors
 
 ## 2. Offline shell

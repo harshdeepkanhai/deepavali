@@ -29,4 +29,4 @@ Save data and level ids are unchanged.
 
 - New: `public/manifest.webmanifest`, `public/icons/*.png`, `pwa/sw.js`, `scripts/make-icons.cjs`; a build step in `vite.config.ts` that writes `sw.js` with the file list and version.
 - `index.html` (manifest and icon links), `src/main.tsx` (registration), `server/` (manifest MIME type, `worker-src` in the CSP), `Dockerfile` (copies `public/` and `pwa/`).
-- About 40 KB of icons; no new runtime dependencies.
+- About 96 KB of icons, downloaded only when installing; no new runtime dependencies.
