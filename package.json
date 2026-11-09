@@ -22,7 +22,7 @@
   "devDependencies": {
     "@fission-ai/openspec": "^1.16.1",
     "@types/three": "0.187.0",
-    "typescript": "^5.9.3",
+    "typescript": "^7.0.2",
     "vite": "^8.3.6",
     "vite-plugin-solid": "^2.11.15"
   }
