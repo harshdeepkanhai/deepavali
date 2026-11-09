@@ -16,7 +16,7 @@ Progress lives only in one browser's localStorage. Clear the browser or switch p
 - Deploy: Dockerfile (distroless, non-root) and `render.yaml` Blueprint. Render builds from the repo, so GitHub Actions is no longer needed to deploy. The workflow becomes CI only (tests, spec validation, vulnerability scans).
 - Playing without an account still works exactly as today, including offline.
 
-Out of scope: in-game shop or payments, social features, leaderboards, email, analytics, admin UI, the 3D world (separate change `build-3d-vertical-world`).
+Out of scope: in-game shop or payments, social features, leaderboards, email, analytics, admin UI, the 3D world (separate change `build-3d-journey-platformer`).
 
 Save data: the localStorage key `deepa-quest-v2` and all level ids are unchanged. Cloud save stores the same shape.
 

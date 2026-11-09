@@ -3,7 +3,7 @@
 ## MODIFIED Requirements
 
 ### Requirement: Local save
-Progress and preferences SHALL be stored in localStorage under the key deepa-quest-v2 as stars per level id plus sound, vibration, prologue-seen, language, larger-text and 3D-world settings.
+Progress and preferences SHALL be stored in localStorage under the key deepa-quest-v2 as stars per level id, the diyas lit in the 3D journey per level id, and the sound, vibration, prologue-seen, language, larger-text and 3D-world settings.
 
 #### Scenario: Returning player
 - **WHEN** a player who has earned stars reloads the game
