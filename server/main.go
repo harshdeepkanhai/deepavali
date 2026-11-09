@@ -10,14 +10,22 @@ import (
 	"os/signal"
 	"syscall"
 	"time"
+
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-func newApp(cfg config, log *slog.Logger) (*app, error) {
+// Session lifetimes: idle and absolute.
+const (
+	sessionIdle = "7 days"
+	sessionMax  = 30 * 24 * time.Hour
+)
+
+func newApp(cfg config, log *slog.Logger, db *pgxpool.Pool) (*app, error) {
 	files, err := loadStatic(cfg.StaticDir)
 	if err != nil {
 		return nil, err
 	}
-	a := &app{cfg: cfg, log: log, files: files, api: http.NewServeMux(), lim: defaultLimiters()}
+	a := &app{cfg: cfg, log: log, db: db, files: files, api: http.NewServeMux(), lim: defaultLimiters()}
 	a.csp = a.buildCSP()
 	return a, nil
 }
@@ -32,7 +40,18 @@ func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
 
-	a, err := newApp(cfg, log)
+	db, err := openDB(ctx, cfg.DatabaseURL)
+	if err != nil {
+		log.Error("database", "err", err.Error())
+		os.Exit(1)
+	}
+	defer db.Close()
+	if err := migrate(ctx, db); err != nil {
+		log.Error("migrate", "err", err.Error())
+		os.Exit(1)
+	}
+
+	a, err := newApp(cfg, log, db)
 	if err != nil {
 		log.Error("start", "err", err.Error())
 		os.Exit(1)
@@ -62,7 +81,7 @@ func main() {
 	}
 }
 
-// janitor forgets idle rate-limit entries. Later steps also expire old sessions here.
+// janitor forgets idle rate-limit entries and deletes expired sessions and ceremonies.
 func (a *app) janitor(ctx context.Context) {
 	t := time.NewTicker(time.Minute)
 	defer t.Stop()
@@ -73,6 +92,11 @@ func (a *app) janitor(ctx context.Context) {
 		case <-t.C:
 			for _, l := range a.lim {
 				l.sweep()
+			}
+			if a.db != nil {
+				if err := expire(ctx, a.db); err != nil {
+					a.log.Warn("expire", "err", err.Error())
+				}
 			}
 		}
 	}

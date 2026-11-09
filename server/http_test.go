@@ -19,7 +19,7 @@ func testApp(t *testing.T) *app {
 	must(t, os.WriteFile(filepath.Join(dir, "a", "x1.js"), []byte(strings.Repeat("console.log(1);", 100)), 0o644))
 	must(t, os.WriteFile(filepath.Join(dir, "a", "x1.js.map"), []byte("{}"), 0o644))
 	cfg := config{PublicOrigin: "https://game.example", RPID: "game.example", Secure: true, StaticDir: dir, ClientIPHeader: "CF-Connecting-IP"}
-	a, err := newApp(cfg, slog.New(slog.NewTextHandler(io.Discard, nil)))
+	a, err := newApp(cfg, slog.New(slog.NewTextHandler(io.Discard, nil)), nil)
 	must(t, err)
 	return a
 }

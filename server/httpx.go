@@ -16,6 +16,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/jackc/pgx/v5/pgxpool"
 	"golang.org/x/time/rate"
 )
 
@@ -24,6 +25,7 @@ const maxBody = 16 << 10 // every request body is capped at 16 KB
 type app struct {
 	cfg   config
 	log   *slog.Logger
+	db    *pgxpool.Pool
 	files map[string]*asset
 	api   *http.ServeMux
 	lim   map[string]*limiter
