@@ -12,7 +12,7 @@ COPY openspec ./openspec
 RUN npx openspec validate --all --strict && npm run build
 
 # 2. Build the server as one static binary with no symbols or build paths.
-FROM golang:1.26-alpine AS server
+FROM golang:1.27-alpine AS server
 # go.mod sets the minimum Go patch release (security fixes). If this image is older,
 # fetch the right toolchain instead of failing; downloads are checksum-verified.
 ENV GOTOOLCHAIN=auto
