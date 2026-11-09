@@ -10,3 +10,10 @@ mountIcons();
 render(() => <Title {...titleActions} />, document.getElementById('s-title')!);
 render(() => <Account onBack={goMap} />, document.getElementById('s-account')!);
 boot();
+
+// Offline play and instant repeat loads (production builds only; see pwa/sw.js).
+if (import.meta.env.PROD && 'serviceWorker' in navigator) {
+  addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch(() => { /* the game works without it */ });
+  });
+}

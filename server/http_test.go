@@ -61,6 +61,9 @@ func TestSecurityHeadersAndNoFingerprints(t *testing.T) {
 			t.Errorf("%s = %q, want it to contain %q", k, h.Get(k), want)
 		}
 	}
+	if !strings.Contains(h.Get("Content-Security-Policy"), "worker-src 'self'") {
+		t.Error("CSP must allow only our own service worker")
+	}
 	if !strings.Contains(h.Get("Content-Security-Policy"), "frame-ancestors 'none'") {
 		t.Error("CSP must forbid framing")
 	}

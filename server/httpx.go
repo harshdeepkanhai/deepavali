@@ -88,7 +88,7 @@ func (a *app) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 func (a *app) buildCSP() string {
 	csp := "default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; " +
-		"connect-src 'self'; manifest-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'"
+		"connect-src 'self'; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'"
 	if a.cfg.Secure {
 		csp += "; upgrade-insecure-requests"
 	}

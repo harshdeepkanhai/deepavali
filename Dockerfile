@@ -7,6 +7,7 @@ RUN npm ci --ignore-scripts --no-audit --no-fund
 COPY index.html vite.config.ts tsconfig.json ./
 COPY src ./src
 COPY public ./public
+COPY pwa ./pwa
 COPY openspec ./openspec
 RUN npx openspec validate --all --strict && npm run build
 

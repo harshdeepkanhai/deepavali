@@ -115,6 +115,13 @@ async function uiFlow(browser) {
   await page.click('#ac-del-yes');
   await page.waitForSelector('#ac-new');
   check('UI: delete account keeps local stars', await page.evaluate(() => window.DQ.save.stars.braj === 3));
+  await page.evaluate(() => navigator.serviceWorker.ready.then(() => true));
+  const cache = await page.evaluate(async () => {
+    const out = [];
+    for (const k of await caches.keys()) for (const r of await (await caches.open(k)).keys()) out.push(new URL(r.url).pathname);
+    return out;
+  });
+  check('UI: offline cache holds the game but never account data', cache.includes('/') && !cache.some(p => p.startsWith('/api/')), cache.join(','));
   check('UI: no console or page errors', errors.length === 0, errors.join(' | '));
   await ctx.close();
 }
