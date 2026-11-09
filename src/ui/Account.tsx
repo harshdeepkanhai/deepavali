@@ -2,6 +2,7 @@ import { createSignal, For, Match, Show, Switch } from 'solid-js';
 import { Icon } from './Icon';
 import { tr } from './bridge';
 import { setHint, signedInHint, syncNow, syncState } from '../net/sync';
+import * as client from '../net/api';
 
 type Me = { name: string; passkeys: number; codesLeft: number };
 
@@ -12,7 +13,8 @@ const [msgKey, setMsgKey] = createSignal('');
 const [busy, setBusy] = createSignal(false);
 const [confirmDelete, setConfirmDelete] = createSignal(false);
 const [code, setCode] = createSignal('');
-const api = () => import('../net/api');
+// Static import on purpose: dynamic import() would pull in bundler-specific helper code.
+const api = async () => client;
 
 /** Called by the legacy router each time the account screen is shown. */
 export async function openAccount() {

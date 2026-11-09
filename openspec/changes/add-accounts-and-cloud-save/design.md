@@ -32,7 +32,7 @@ The game is a static Vite + Solid build with an imperative game core. Progress i
 
 **9. Non-disclosure.** No `Server`/`X-Powered-By`; identical JSON (API) or HTML (pages) bodies for 404/405/500 with an opaque reference id; generic cookie names; Vite assets renamed to `a/<hash>.js`, no source maps, no module-preload polyfill; database errors never reach clients; ids are random, never sequential. The binary is built with `-trimpath -ldflags "-s -w -buildid="`.
 
-**10. Optimisation.** Hashed assets get `Cache-Control: public, max-age=31536000, immutable`; HTML gets `no-cache`. Assets are pre-compressed with gzip at build time and served when the browser accepts it. The API client is a small lazy-loaded chunk, so guests never download it.
+**10. Optimisation.** Hashed assets get `Cache-Control: public, max-age=31536000, immutable`; HTML gets `no-cache`. Assets are pre-compressed with gzip at build time and served when the browser accepts it. The API client (about 1 KB gzipped) is bundled statically rather than lazy-loaded: dynamic `import()` would add bundler-specific helper code. Guests download it but never call the server.
 
 ## Threat model
 

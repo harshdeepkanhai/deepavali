@@ -34,7 +34,7 @@
 - [x] 5.1 Lazy-loaded API client with base64url passkey helpers
 - [x] 5.2 Account panel in Settings: save progress, sign in, recovery codes, sign out (here / everywhere), delete; all 8 languages
 - [x] 5.3 Sync on sign-in and after results, with retry
-- [ ] 5.4 Vite output hardening: renamed assets, no preload polyfill, no source maps
+- [x] 5.4 Vite output hardening: renamed assets, no preload polyfill, no source maps
 - [x] 5.5 Verify: `npm test` still passes; account e2e passes through the real UI
 
 ## 6. Deploy and operations

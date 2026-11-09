@@ -6,7 +6,20 @@ import solid from 'vite-plugin-solid';
 export default defineConfig({
   base: './',
   plugins: [solid()],
-  build: { target: 'es2020', assetsInlineLimit: 0 },
+  build: {
+    target: 'es2020',
+    assetsInlineLimit: 0,
+    sourcemap: false,
+    // Neutral output: short hashed names, no framework-specific helper code.
+    modulePreload: false,
+    rolldownOptions: {
+      output: {
+        entryFileNames: 'a/[hash].js',
+        chunkFileNames: 'a/[hash].js',
+        assetFileNames: 'a/[hash][extname]',
+      },
+    },
+  },
   // `npm run dev` talks to a local Go server (see server/README.md)
   server: { proxy: { '/api': 'http://localhost:8080' } },
 });

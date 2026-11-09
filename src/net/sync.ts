@@ -1,5 +1,6 @@
 import { createSignal } from 'solid-js';
 import { save, persist } from '../core/save.js';
+import { putStars } from './api';
 
 // Guests never talk to the server. This hint (not a secret: the session cookie is HttpOnly)
 // only tells the game that a signed-in session may exist on this device.
@@ -31,7 +32,6 @@ export async function syncNow(): Promise<void> {
   const stars: Record<string, number> = {};
   for (const [k, v] of Object.entries(local)) if (Number.isInteger(v) && v >= 0 && v <= 3) stars[k] = v;
   try {
-    const { putStars } = await import('./api');
     const merged = await putStars(stars);
     let changed = false;
     for (const [k, v] of Object.entries(merged)) if ((local[k] || 0) < v) { local[k] = v; changed = true; }
