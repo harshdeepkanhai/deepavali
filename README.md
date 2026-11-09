@@ -7,6 +7,14 @@ mini-game, and collect its lamp card.
 
 Languages: English, हिन्दी, ਪੰਜਾਬੀ, বাংলা, தமிழ், ગુજરાતી, नेपाली, Bahasa Melayu.
 
+The journey is a 3D platformer, best held sideways: run and jump along a path of lamps from place
+to place, light diyas on the way, and step into each place's glowing circle to hear its story.
+Touch: joystick on the left, drag on the right to look, jump button. Keyboard: WASD or arrows,
+Space to jump, F or Enter to open a story, Q and E to turn, M for the map, Esc for the menu.
+No weapons, no fighting, and no lives in the journey: a fall just takes you back to the last
+checkpoint, and the map button takes you to any place you have unlocked. On phones that cannot
+run 3D smoothly, or with "3D world" turned off in Settings, the game uses the 2D map instead.
+
 Play as a guest with nothing sent anywhere, or create an account with a passkey (fingerprint,
 face or screen lock: no email, no password) to keep your stars on every device.
 
@@ -15,6 +23,7 @@ face or screen lock: no email, no password) to keep your stars on every device.
 | Part | What | Where |
 |---|---|---|
 | Game | SolidJS + TypeScript, built by Vite into static files | `src/`, `index.html` |
+| 3D | three.js, loaded only when the journey opens; art built in code | `src/world/` |
 | Server | Go: serves the game and a small JSON API for passkeys and cloud save | `server/` |
 | Database | PostgreSQL (private, never reachable from the internet) | `server/migrations/` |
 | Specs | OpenSpec: what the game must do, and planned changes | `openspec/` |
