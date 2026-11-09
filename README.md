@@ -40,16 +40,51 @@ go test ./...
 TEST_DATABASE_URL=postgres://... node ../scripts/e2e-accounts.cjs   # throwaway database only
 ```
 
+## Works offline, installs like an app
+
+After the first visit the game opens instantly from the device, even with no network, and every
+level plays offline. Android and desktop Chrome offer **Install app**; on iPhone use
+**Share → Add to Home Screen**. New versions download in the background and are used from the
+next launch. Account and sync requests always go to the server and are never cached.
+
 ## Deploy on Render
 
-1. Render dashboard → **New → Blueprint** → choose this repository. It reads `render.yaml`.
-2. When asked, set `PUBLIC_ORIGIN` to the site address, for example `https://deepa-quest.onrender.com`
-   (or your own domain), with no trailing slash. Passkeys are tied to this domain.
-3. Render builds the Dockerfile, runs database migrations on start, and deploys on every push.
-   A failing build or health check keeps the previous version live.
+**Before you start**
+- Render deploys one branch. Merge your work into `main` (a squash merge keeps history tidy),
+  or choose this branch when you create the Blueprint.
+- Decide the final web address first. Passkeys only work on the domain they were created on.
 
-Notes: the free web plan sleeps after 15 idle minutes, and free Render databases are deleted after
-30 days, so the Blueprint uses a paid database plan. See `SECURITY.md` for the security model.
+**Steps**
+1. Sign up at render.com with GitHub. In **Account Settings → Git Deployment Credentials**,
+   connect GitHub and give the Render app access to this repository (needed for private repos).
+2. **New → Blueprint** → pick this repository and branch. Render reads `render.yaml` and shows:
+   - web service `deepa-quest` (Docker, free plan, Singapore)
+   - database `deepa-quest-db` (PostgreSQL 18, paid `basic-256mb` plan, Singapore, private)
+3. When asked for `PUBLIC_ORIGIN`, enter `https://deepa-quest.onrender.com` (no trailing slash).
+4. **Apply**. The first build takes several minutes. The site goes live only after the build
+   and the `/up` health check pass; otherwise the previous version keeps running.
+5. Open the service page and copy the exact address shown at the top. If Render added a suffix
+   because the name was taken, go to **Environment**, set `PUBLIC_ORIGIN` to that exact address,
+   and choose **Save, rebuild, and deploy**.
+6. Check it: play a level as a guest, then **Settings → Account → Create account**. Reload once,
+   switch to flight mode, and open the game again: it should still play.
+7. Own domain (optional, before inviting players): service → **Settings → Custom Domains**,
+   add the domain, create the DNS record Render shows, wait for the certificate, then set
+   `PUBLIC_ORIGIN` to `https://your-domain` and redeploy.
+
+After that, every push to the branch deploys automatically.
+
+**If something goes wrong**
+| You see | Fix |
+|---|---|
+| Deploy fails; log says `PUBLIC_ORIGIN and DATABASE_URL are required` | set `PUBLIC_ORIGIN` in Environment |
+| Log says `PUBLIC_ORIGIN must use https outside localhost` | use `https://` |
+| The game works, but account buttons say "That did not work" | `PUBLIC_ORIGIN` must match the address bar exactly |
+| The repository is missing in Render | give the Render GitHub app access to it again |
+| First visit after a quiet spell takes about a minute | the free web plan sleeps after 15 idle minutes; returning players still open instantly from the offline cache |
+
+Costs: the free web plan is fine to start. Free Render databases are deleted after 30 days, so the
+Blueprint uses a paid database plan; check Render's pricing page before applying.
 
 ## Server settings
 

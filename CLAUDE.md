@@ -30,6 +30,8 @@ The player travels a map of 13 places. Each place = story panels → mission →
    never log tokens, codes, passkey material or client addresses, and never return internal error text
    (use `a.internal(w, err)`). Responses must not name the server, framework or database.
 10. Level ids are save keys on the device **and** in `server/progress.go` (`levelIDs`). Keep both in sync.
+11. Offline: every build output file except `icons/` is precached as one version by `pwa/sw.js`.
+    Never cache `/api/`. Do not add lazily loaded chunks without versioning them the same way.
 
 ## Commands
 | | |
@@ -40,6 +42,7 @@ The player travels a map of 13 places. Each place = story panels → mission →
 | `npm test` | build, then `scripts/smoke.cjs`: plays all 13 levels and 8 languages headlessly; fails on console errors, missing translations, emoji, broken pause. Needs Playwright + Chromium. `SHOTS=dir` saves screenshots. |
 | `npm run spec:validate` | `openspec validate --all --strict` |
 | `cd server && go test ./...` | server unit tests; with `TEST_DATABASE_URL` also the migration test |
+| `node scripts/make-icons.cjs` | re-render the app icons in `public/icons/` after changing the diya |
 | `TEST_DATABASE_URL=... node scripts/e2e-accounts.cjs` | real server + PostgreSQL + Chromium virtual passkeys: 36 checks (UI, API, attacks). Throwaway database only. |
 
 ## OpenSpec workflow
@@ -62,7 +65,9 @@ src/game/engines.js     E[type] mini-game engines + field/rel/segDist/keys
 src/core/               util, icons (IC, ic, stars, sprite, spr), save, i18n (t, getTL/setTL, X, lgOf, gcfg),
                         audio (sfx, buzz), fx (particles), clock (G, HUD, pop, flash, shakeEl, makeCanvas)
 src/data/               strings.js (LN, U), levels.js (PRO, LV)
-scripts/smoke.cjs       headless smoke test (guest play, must make zero /api calls)
+scripts/smoke.cjs       headless smoke test (guest play with zero /api calls, offline play, installability)
+pwa/sw.js               service worker template; the build fills in the file list and version
+public/                 manifest.webmanifest and icons/ (rendered from the diya; the only raster images)
 scripts/e2e-accounts.cjs  account and attack tests against the real server
 server/                 Go server: httpx.go (headers, limits, errors), static.go, auth.go (passkeys,
                         sessions, recovery), progress.go (cloud save, deletion), db.go + migrations/

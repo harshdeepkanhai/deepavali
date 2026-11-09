@@ -16,4 +16,4 @@
 
 ## 3. Docs
 
-- [ ] 3.1 README: offline and install notes, full Render deploy guide
+- [x] 3.1 README: offline and install notes, full Render deploy guide
