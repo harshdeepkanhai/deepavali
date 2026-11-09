@@ -12,7 +12,8 @@ const os = require('node:os');
 const path = require('node:path');
 const { chromium } = require('playwright');
 
-const PORT = 4173, URL = `http://localhost:${PORT}/?debug`, SHOTS = process.env.SHOTS;
+// The main flows pin 2D (g3d=0); world3d() below covers the 3D journey platformer and runner (g3d=1).
+const PORT = 4173, URL = `http://localhost:${PORT}/?debug&g3d=0`, SHOTS = process.env.SHOTS;
 const root = path.join(__dirname, '..');
 const fail = [];
 
@@ -77,6 +78,82 @@ async function offlineAndInstall() {
   } finally {
     await ctx.close();
     fs.rmSync(profile, { recursive: true, force: true });
+  }
+}
+
+// The 3D journey platformer and the 3D runner, in landscape (headless Chromium renders WebGL in software).
+async function world3d() {
+  const b = await chromium.launch();
+  try {
+    const page = await (await b.newContext({ viewport: { width: 844, height: 390 } })).newPage();
+    const errors = [];
+    page.on('pageerror', e => errors.push(e.message));
+    page.on('console', m => { if (m.type() === 'error') errors.push(m.text()); });
+    await page.goto(URL.replace('g3d=0', 'g3d=1'));
+    await page.evaluate(() => { const D = window.DQ; D.save.stars.ayodhya = 3; D.save.seen = true; D.persist(); D.goMap(); });
+    await page.waitForSelector('.w3d canvas');
+    const st = () => page.evaluate(() => window.DQ.world().state());
+    const settle = (fn, ms = 10000) => page.waitForFunction(fn, null, { timeout: ms }).then(() => true, () => false);
+    if (!(await settle(() => window.DQ.world().state().circle === 1))) fail.push('3D: the hero did not land in Govardhan\'s story circle');
+    if (!(await page.evaluate(() => document.documentElement.classList.contains('w3on') && getComputedStyle(document.querySelector('#s-map')).visibility === 'hidden'))) fail.push('3D: the journey did not take over the screen');
+    const small = await page.$$eval('.w3-top button, .w3-jump, .w3-act', bs => bs.filter(x => { const r = x.getBoundingClientRect(); return r.width && (r.width < 44 || r.height < 44); }).length);
+    if (small) fail.push(`3D: ${small} journey buttons are smaller than 44px`);
+
+    let s = await st();
+    await page.keyboard.down('KeyW'); await page.waitForTimeout(500); await page.keyboard.up('KeyW');
+    let s2 = await st();
+    if (Math.hypot(s2.x - s.x, s2.z - s.z) < 0.5) fail.push('3D: W did not move the hero');
+    await page.keyboard.press('Space');
+    let top = s2.y;
+    for (let k = 0; k < 15; k++) { await page.waitForTimeout(40); top = Math.max(top, (await st()).y); }
+    if (top < s2.y + 0.6) fail.push('3D: Space did not jump');
+
+    await page.keyboard.press('KeyM');
+    await page.waitForSelector('#modal.on .tv');
+    await page.click('#modal .tv [data-i="5"]');
+    if (!(await page.$('.toast')) || !(await page.$('#modal.on'))) fail.push('3D: fast travel to a locked place was not refused');
+    await page.click('#modal .tv [data-i="1"]');
+    if (!(await settle(() => window.DQ.world().state().circle === 1))) fail.push('3D: fast travel did not reach Govardhan\'s story circle');
+    if (!(await page.$('.w3-act:not([hidden])'))) fail.push('3D: no action button in the story circle');
+    else {
+      await page.click('.w3-act');
+      await page.waitForTimeout(300);
+      if ((await page.evaluate(() => window.DQ.cur().L.id)) !== 'braj') fail.push('3D: the action button did not open the story');
+    }
+
+    await page.evaluate(() => { const D = window.DQ; D.showResult(D.LV[1], 1, { stars: 2, line: 'x' }); });
+    await page.waitForTimeout(400);
+    await page.evaluate(() => window.DQ.goMap());
+    if (!(await settle(() => window.DQ.world().state().open[2]))) fail.push('3D: winning Govardhan did not open the gate to Pawapuri');
+    await page.waitForTimeout(1500);
+    if (SHOTS) await page.screenshot({ path: path.join(SHOTS, '3d-journey.png') });
+
+    await page.evaluate(() => { const w = window.DQ.world(), n = w.state().next; w.put(n[0], n[1] + 1.5, n[2]); });
+    if (!(await settle(() => window.DQ.world().state().lit > 0))) fail.push('3D: touching a diya did not light it');
+    if (!(await page.evaluate(() => Object.values(window.DQ.save.lit || {}).some(v => v > 0)))) fail.push('3D: the lit diya was not saved');
+    await page.evaluate(() => { const w = window.DQ.world(), p = w.state(); w.put(p.x, p.y - 20, p.z); });
+    await page.waitForTimeout(300);
+    if (!(await settle(() => { const p = window.DQ.world().state(); return p.grounded && p.y > -10; }))) fail.push('3D: a fall did not return the hero to a checkpoint');
+
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(200);
+    if (!(await page.$('#modal.on #xg'))) fail.push('3D: Escape did not open the menu');
+    await page.keyboard.press('Escape');
+
+    await page.evaluate(() => { const D = window.DQ; D.openStory(D.LV[8], 8); D.startGame(D.LV[8], 8); });
+    await page.waitForTimeout(3500);
+    if (!(await page.$('#g-stage canvas'))) fail.push('3D runner: no canvas');
+    for (let k = 0; k < 4; k++) { await page.keyboard.press(k % 2 ? 'ArrowLeft' : 'ArrowRight'); await page.waitForTimeout(300); }
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(200);
+    if (!(await page.$('#pr'))) fail.push('3D runner: Escape did not pause'); else await page.click('#pr');
+    await page.waitForTimeout(800);
+    if (SHOTS) await page.screenshot({ path: path.join(SHOTS, '3d-runner.png') });
+    await page.evaluate(() => { const D = window.DQ; D.G.reset(); D.goMap(); });
+    await page.waitForTimeout(500);
+    if (errors.length) fail.push(`3D errors: ${errors.join(' | ')}`);
+  } finally {
+    await b.close();
   }
 }
 
@@ -154,7 +231,8 @@ async function offlineAndInstall() {
     fail.push(...report, ...errs.map(e => 'console: ' + e));
     await browser.close();
     await offlineAndInstall();
+    await world3d();
   } finally { server.kill(); }
   if (fail.length) { console.error('SMOKE FAILED\n- ' + fail.join('\n- ')); process.exit(1); }
-  console.log('Smoke test passed: 13 levels, 8 languages, pause, auto-pause, translations, offline play, instant reloads, installable, no emoji, no console errors.');
+  console.log('Smoke test passed: 13 levels, 8 languages, pause, auto-pause, translations, offline play, instant reloads, installable, 3D journey and runner, no emoji, no console errors.');
 })().catch(e => { console.error(e); process.exit(1); });

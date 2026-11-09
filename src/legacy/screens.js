@@ -17,7 +17,33 @@ export function setUI(){setTL(save.lang);document.documentElement.lang=save.lang
 export let screen='',cur={L:null,i:0,p:0,lg:'en'},justUnlocked=-1,mapW=0,albumBack='map',escFn=null,storyGo=()=>{};
 export const unlocked=i=>i===0||(save.stars[LV[i-1].id]||0)>0;
 export const totalStars=()=>LV.reduce((a,l)=>a+(save.stars[l.id]||0),0);
-export function show(id){$$('.scr').forEach(s=>s.classList.toggle('on',s.id===id));screen=id}
+export function show(id){$$('.scr').forEach(s=>s.classList.toggle('on',s.id===id));screen=id;if(id!=='s-map'&&world)world.hide()}
+
+/* 3D journey (src/world/): optional and lazily loaded. The 2D map always renders first, and is
+   used whenever WebGL is missing, the device is too slow, or the player turns 3D off. */
+const Q=new URLSearchParams(location.search),FORCE3D=Q.has('debug')&&Q.get('g3d')==='1',FORCE2D=Q.has('debug')&&Q.get('g3d')==='0';
+let webgl=null,world=null,worldMod=null,gameToken=0;
+export function use3D(){if(FORCE2D)return false;if(FORCE3D)return true;if(save.lite)return false;
+ if(webgl===null){try{const c=document.createElement('canvas');webgl=!!(c.getContext('webgl2')||c.getContext('webgl'))}catch(e){webgl=false}}return webgl}
+const worldOn=()=>document.documentElement.classList.contains('w3on');
+function fallback2D(){if(world)world.off();if(!save.lite){save.lite=true;persist();toast(t('g3dOff'))}if(screen==='s-map')renderMap()}
+function showWorld(reach,ju){
+ (worldMod||(worldMod=import('../world/platformer'))).then(m=>{if(screen!=='s-map'||!use3D())return;
+  try{world=world||m.createWorld(LV.map(l=>({id:l.id,icon:l.icon,color:l.color})))}catch(e){fallback2D();return}
+  world.show({places:LV.map((l,i)=>{const nm=nameOf(l),ln=l.ll&&l.ll[0];return{name:nm,sub:ln&&l.tr[ln].n!==nm?l.tr[ln].n:'',subLang:ln||'',stars:save.stars[l.id]||0,locked:!unlocked(i)}}),
+   cur:reach,justUnlocked:ju,total:`${totalStars()}/${LV.length*3}`,lit:save.lit||{},reduced:RM,force:FORCE3D,
+   labels:{play:t('playB'),jump:t('jump'),map:t('map'),album:t('album'),settings:t('settings'),home:t('home'),lit:t('lit'),rotate:t('rotate'),close:t('close')},
+   busy:()=>$('#modal').classList.contains('on'),
+   onOpen:i=>{sfx.tap();openStory(LV[i],i)},onLocked:()=>{sfx.bad();buzz(60);toast(ic('lock')+t('locked'))},onSlow:fallback2D,
+   onLit:(id,mask)=>{(save.lit||(save.lit={}))[id]=mask;persist()},
+   onMap:travel,onAlbum:()=>{sfx.tap();goAlbum('map')},onSettings:()=>{sfx.tap();settings()},onHome:()=>{sfx.tap();goTitle()}})
+ }).catch(()=>{})}
+/* Fast travel: every place, with stars; unlocked ones move the player to their story circle. */
+function travel(){if(!world)return;sfx.tap();setTL(save.lang);
+ modal(`<div class="mcard tvc"><div class="rt">${t('map')}</div><div class="tv">${LV.map((l,i)=>{const lk=!unlocked(i),nm=nameOf(l);return`<button class="btn${lk?' off':''}" data-i="${i}" aria-label="${nm}${lk?' · '+t('locked'):''}">${ic(lk?'lock':l.icon)}<span>${nm}</span>${lk?'':stars(save.stars[l.id]||0)}</button>`}).join('')}</div><button class="btn ghost" id="tc">${t('close')}</button></div>`,closeModal);
+ $('#modal .tv').onclick=e=>{const b=e.target.closest('[data-i]');if(!b)return;const i=+b.dataset.i;
+  if(!unlocked(i)){sfx.bad();buzz(60);toast(ic('lock')+t('locked'));return}closeModal();world.travel(i)};
+ $('#tc').onclick=closeModal}
 export function modal(x,esc){const m=$('#modal');m.innerHTML=x;m.lang=getTL();m.classList.add('on');escFn=esc||null;const b=$('.btn',m);if(b)try{b.focus({preventScroll:true})}catch(e){}return m}
 export function closeModal(){const m=$('#modal');m.classList.remove('on');m.innerHTML='';escFn=null}
 export function toast(t){const e=h('div','toast',t);e.setAttribute('role','status');app.appendChild(e);setTimeout(()=>e.remove(),2300)}
@@ -58,7 +84,8 @@ export function renderMap(){
   if(!unlocked(i)){sfx.bad();buzz(60);toast(ic('lock')+t('locked'));return}
   sfx.tap();openStory(LV[i],i)};
  $('#mh').onclick=goTitle;$('#ma').onclick=()=>goAlbum('map');$('#ms').onclick=settings;
- const f=pts[justUnlocked>=0?justUnlocked:reach];sc.scrollTop=Math.max(0,f.y-sc.clientHeight*.5);justUnlocked=-1;
+ const f=pts[justUnlocked>=0?justUnlocked:reach];sc.scrollTop=Math.max(0,f.y-sc.clientHeight*.5);const ju=justUnlocked;justUnlocked=-1;
+ if(use3D())showWorld(reach,ju);else if(world)world.off();
 }
 
 export function openStory(L,i){G.reset();closeModal();cur={L,i,p:0,lg:lgOf(L)};show('s-story');renderStory()}
@@ -94,7 +121,10 @@ export function startGame(L,i){
  const rd=h('div','ready',t('ready'));gst.appendChild(rd);
  G.later(()=>{rd.textContent=t('go');sfx.good();buzz(20)},650);
  let fired=false;
- G.later(()=>{rd.remove();E[L.game.type](gst,gcfg(L,lg),res=>{if(fired)return;fired=true;G.reset();showResult(L,i,res)})},1150);
+ const go=eng=>eng(gst,gcfg(L,lg),res=>{if(fired)return;fired=true;G.reset();showResult(L,i,res)});
+ const want3D=L.game.type==='runner'&&use3D(),token=++gameToken;
+ G.later(()=>{rd.remove();if(!want3D)return go(E[L.game.type]);
+  import('../world/runner').then(m=>{if(token===gameToken&&screen==='s-game')go(m.runner3d)}).catch(()=>{if(token===gameToken&&screen==='s-game')go(E.runner)})},1150);
 }
 export function pauseMenu(){if(screen!=='s-game'||$('#modal').classList.contains('on'))return;G.pause();
  const res=()=>{closeModal();G.resume()};
@@ -133,15 +163,17 @@ export function settings(){setTL(save.lang);modal(`<div class="mcard"><div class
  <button class="btn" id="xs">${ic(save.snd?'sndOn':'sndOff')}<span>${onOff('sound',save.snd)}</span></button>
  <button class="btn" id="xh">${ic(save.hap?'vib':'vibOff')}<span>${onOff('vib',save.hap)}</span></button>
  <button class="btn" id="xb">${ic('text')}<span>${onOff('bigtx',save.big)}</span></button>
+ <button class="btn" id="xg">${ic('compass')}<span>${onOff('g3d',use3D())}</span></button>
  <button class="btn" id="xp">${ic('moon')}${t('prologue')}</button><button class="btn" id="xr">${ic('restart')}${t('reset')}</button><button class="btn pri" id="xc">${t('done')}</button></div></div>`,closeModal);
  $('#xl').onclick=()=>pickLang(()=>{renderMap();settings()});
  $('#xa').onclick=()=>{sfx.tap();goAccount()};
  $('#xs').onclick=()=>{save.snd=!save.snd;persist();settings();sfx.tap()};
  $('#xh').onclick=()=>{save.hap=!save.hap;persist();buzz(30);settings()};
  $('#xb').onclick=()=>{save.big=!save.big;persist();setUI();renderMap();settings()};
+ $('#xg').onclick=()=>{save.lite=use3D();persist();renderMap();settings()};
  $('#xp').onclick=()=>openStory(PRO,-1);
  $('#xr').onclick=()=>{modal(`<div class="mcard"><div class="rt">${t('reset')}</div><p class="rf">${t('resetQ')}</p><div class="row"><button class="btn" id="cn">${t('cancel')}</button><button class="btn danger" id="cy">${t('erase')}</button></div></div>`,settings);
-  $('#cn').onclick=settings;$('#cy').onclick=()=>{save.stars={};persist();closeModal();renderMap();toast(t('resetOk'))}};
+  $('#cn').onclick=settings;$('#cy').onclick=()=>{save.stars={};save.lit={};persist();closeModal();renderMap();toast(t('resetOk'))}};
  $('#xc').onclick=closeModal;
 }
 export async function share(n){const text=t('shareTx',{t:n,m:LV.length*3}),url=location.href;
@@ -156,7 +188,7 @@ addEventListener('keydown',e=>{const btn=e.target&&e.target.closest&&e.target.cl
  if(screen==='s-story'&&cur.L&&cur.p<cur.L.story.length){if(e.key==='ArrowRight'||(!btn&&(e.key===' '||e.key==='Enter'))){e.preventDefault();storyGo(1)}else if(e.key==='ArrowLeft')storyGo(-1);else if(e.key==='Escape')goMap()}
  else if(screen==='s-game'&&(e.key==='Escape'||e.key==='p'))pauseMenu();
  else if(screen==='s-account'&&e.key==='Escape')goMap();
- else if((screen==='s-map'||screen==='s-album')&&e.key==='Escape')screen==='s-album'&&albumBack==='title'?goTitle():screen==='s-album'?goMap():goTitle()});
+ else if((screen==='s-map'||screen==='s-album')&&e.key==='Escape'){if(screen==='s-map'&&worldOn())settings();else if(screen==='s-album'&&albumBack==='title')goTitle();else if(screen==='s-album')goMap();else goTitle()}});
 app.addEventListener('contextmenu',e=>e.preventDefault());
 document.addEventListener('pointerdown',()=>actx(),{once:true});
 $('#g-pause').onclick=pauseMenu;
@@ -164,4 +196,4 @@ setUI();fxSize();goTitle();
 onStarsChanged(()=>{if(screen==='s-map')renderMap();refreshUI()});syncSoon();
 }
 /* test hook: only with ?debug in the URL */
-if(new URLSearchParams(location.search).has('debug'))window.DQ={LV,PRO,U,LN,E,G,save,persist,setUI,renderMap,openStory,startGame,showResult,finale,goAlbum,goMap,goTitle,settings,closeModal,cur:()=>cur};
+if(new URLSearchParams(location.search).has('debug'))window.DQ={LV,PRO,U,LN,E,G,save,persist,setUI,renderMap,openStory,startGame,showResult,finale,goAlbum,goMap,goTitle,settings,closeModal,cur:()=>cur,world:()=>world};

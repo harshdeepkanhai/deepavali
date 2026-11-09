@@ -6,13 +6,13 @@ Every launch downloads the game again, and with no network it does not open at a
 
 ## What Changes
 
-- A web app manifest (name, icons, portrait, standalone, theme colours) so Android, desktop and iOS can install the game.
+- A web app manifest (name, icons, any orientation, standalone, theme colours) so Android, desktop and iOS can install the game.
 - A small hand-written service worker. On first visit it stores the whole game shell (page, script, styles, icons, manifest) in one versioned cache. Later launches load from that cache with no download.
 - Atomic updates: a new version downloads in the background and is used from the next launch, so a launch never mixes files from two versions.
 - Account and sync requests (`/api/`) always go to the network and are never stored.
 - App icons are PNG files rendered from the existing diya icon, the only raster images in the game.
 
-Out of scope: push notifications, background sync, an in-game install button, caching 3D models (handled when `build-3d-vertical-world` lands).
+Out of scope: push notifications, background sync, an in-game install button, caching 3D models (handled when `build-3d-journey-platformer` lands).
 
 Save data and level ids are unchanged.
 

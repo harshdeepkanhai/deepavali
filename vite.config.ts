@@ -41,13 +41,26 @@ function offlineShell(): Plugin {
 
 // base './' keeps every asset path relative, so one build works at
 // https://<user>.github.io/deepavali/, at localhost:5173/ and from any sub-folder.
+// Lazily loaded chunks bring a small loader helper whose error event names the bundler; rename it.
+function neutralNames(): Plugin {
+  return {
+    name: 'neutral-names',
+    apply: 'build',
+    renderChunk(code) {
+      return code.includes('vite:preloadError') ? code.replaceAll('vite:preloadError', 'chunk:loaderror') : null;
+    },
+  };
+}
+
 export default defineConfig({
   base: './',
-  plugins: [solid(), offlineShell()],
+  plugins: [solid(), neutralNames(), offlineShell()],
   build: {
     target: 'es2020',
     assetsInlineLimit: 0,
     sourcemap: false,
+    // three.js is one lazily loaded chunk (about 145 KB gzipped), precached by the offline shell.
+    chunkSizeWarningLimit: 600,
     // Neutral output: short hashed names, no framework-specific helper code.
     modulePreload: false,
     rolldownOptions: {

@@ -3,7 +3,7 @@
 ## ADDED Requirements
 
 ### Requirement: Installable app
-The game SHALL provide a web app manifest and icons so supporting browsers offer to install it, and once installed it SHALL open full screen in portrait without browser controls.
+The game SHALL provide a web app manifest and icons so supporting browsers offer to install it, and once installed it SHALL open full screen without browser controls, in either orientation (the 3D journey asks for landscape).
 
 #### Scenario: Installing on Android
 - **WHEN** a player opens the game in Chrome on Android
