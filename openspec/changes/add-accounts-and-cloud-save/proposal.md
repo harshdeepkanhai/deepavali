@@ -35,5 +35,5 @@ Save data: the localStorage key `deepa-quest-v2` and all level ids are unchanged
 - New `server/` Go module (net/http, go-webauthn, pgx); new `Dockerfile`, `render.yaml`, `SECURITY.md`.
 - Frontend: account panel in Settings, a small API client, sync on sign-in and after each result.
 - New UI strings in all 8 languages.
-- Hosting: one Render web service plus one Render PostgreSQL instance. Free Render Postgres is deleted after 30 days, so production needs a paid database plan.
+- Hosting: one Render web service plus one Render PostgreSQL instance, both on free plans to start. The free database is deleted after 30 days, so it must be upgraded or moved before then.
 - `.github/workflows/deploy.yml` stops deploying to Pages and becomes CI.
