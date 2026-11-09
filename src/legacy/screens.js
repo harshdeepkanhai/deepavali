@@ -22,7 +22,7 @@ export function show(id){$$('.scr').forEach(s=>s.classList.toggle('on',s.id===id
 /* 3D journey (src/world/): optional and lazily loaded. The 2D map always renders first, and is
    used whenever WebGL is missing, the device is too slow, or the player turns 3D off. */
 const Q=new URLSearchParams(location.search),FORCE3D=Q.has('debug')&&Q.get('g3d')==='1',FORCE2D=Q.has('debug')&&Q.get('g3d')==='0';
-let webgl=null,world=null,worldMod=null;
+let webgl=null,world=null,worldMod=null,gameToken=0;
 export function use3D(){if(FORCE2D)return false;if(FORCE3D)return true;if(save.lite)return false;
  if(webgl===null){try{const c=document.createElement('canvas');webgl=!!(c.getContext('webgl2')||c.getContext('webgl'))}catch(e){webgl=false}}return webgl}
 const worldOn=()=>document.documentElement.classList.contains('w3on');
@@ -121,7 +121,10 @@ export function startGame(L,i){
  const rd=h('div','ready',t('ready'));gst.appendChild(rd);
  G.later(()=>{rd.textContent=t('go');sfx.good();buzz(20)},650);
  let fired=false;
- G.later(()=>{rd.remove();E[L.game.type](gst,gcfg(L,lg),res=>{if(fired)return;fired=true;G.reset();showResult(L,i,res)})},1150);
+ const go=eng=>eng(gst,gcfg(L,lg),res=>{if(fired)return;fired=true;G.reset();showResult(L,i,res)});
+ const want3D=L.game.type==='runner'&&use3D(),token=++gameToken;
+ G.later(()=>{rd.remove();if(!want3D)return go(E[L.game.type]);
+  import('../world/runner').then(m=>{if(token===gameToken&&screen==='s-game')go(m.runner3d)}).catch(()=>{if(token===gameToken&&screen==='s-game')go(E.runner)})},1150);
 }
 export function pauseMenu(){if(screen!=='s-game'||$('#modal').classList.contains('on'))return;G.pause();
  const res=()=>{closeModal();G.resume()};
