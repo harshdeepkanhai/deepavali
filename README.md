@@ -59,7 +59,7 @@ next launch. Account and sync requests always go to the server and are never cac
    connect GitHub and give the Render app access to this repository (needed for private repos).
 2. **New → Blueprint** → pick this repository and branch. Render reads `render.yaml` and shows:
    - web service `deepa-quest` (Docker, free plan, Singapore)
-   - database `deepa-quest-db` (PostgreSQL 18, paid `basic-256mb` plan, Singapore, private)
+   - database `deepa-quest-db` (PostgreSQL 18, free plan, Singapore, private)
 3. When asked for `PUBLIC_ORIGIN`, enter `https://deepa-quest.onrender.com` (no trailing slash).
 4. **Apply**. The first build takes several minutes. The site goes live only after the build
    and the `/up` health check pass; otherwise the previous version keeps running.
@@ -83,8 +83,25 @@ After that, every push to the branch deploys automatically.
 | The repository is missing in Render | give the Render GitHub app access to it again |
 | First visit after a quiet spell takes about a minute | the free web plan sleeps after 15 idle minutes; returning players still open instantly from the offline cache |
 
-Costs: the free web plan is fine to start. Free Render databases are deleted after 30 days, so the
-Blueprint uses a paid database plan; check Render's pricing page before applying.
+Costs: everything in the Blueprint is free. **Write down the day you create it:** Render deletes a
+free database 30 days after creation (with 14 more days to upgrade), and free databases have no
+backups. Every account and cloud save lives there, so before day 30 either upgrade the database
+plan in Render, or move it (below).
+
+## Moving the database
+
+The server speaks PostgreSQL, so any PostgreSQL host works with no code change: create the
+database there, copy the data, and set `DATABASE_URL` to the new connection string (keep
+`sslmode=require`). The server creates its tables on start.
+
+```bash
+pg_dump --no-owner --no-acl "$OLD_DATABASE_URL" > deepa.sql   # Render: Database -> Connect -> External URL
+psql "$NEW_DATABASE_URL" < deepa.sql
+```
+
+To reach the Render database from your computer for the dump, add your IP under the database's
+**Access Control** for a moment, then remove it. A move to a different kind of database, such as
+MongoDB, needs a new data layer in `server/` first.
 
 ## Server settings
 

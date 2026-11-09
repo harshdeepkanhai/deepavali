@@ -53,6 +53,6 @@ The game is a static Vite + Solid build with an imperative game core. Progress i
 - **Not fully unidentifiable.** The app hides its own stack, but Render's edge adds its own headers (such as `cf-ray`) and DNS shows the host. No app can remove those. Hiding the stack slows reconnaissance; it is not a defence on its own.
 - **No system is attack-proof.** These controls remove whole classes of attacks and slow the rest. `SECURITY.md` explains how to report issues and what to do in an incident (revoke all sessions, rotate secrets, restore a backup).
 - **Single instance.** Sessions are in Postgres, but rate-limit state is in memory, so limits are per instance. Scaling out needs Render Key Value for shared limits.
-- **Free tier.** Free Postgres is deleted after 30 days and free services sleep after 15 minutes. Use paid plans for real players.
+- **Free tier.** The Blueprint starts on Render's free database, which is deleted 30 days after creation and has no backups; before then it must be upgraded or moved to another PostgreSQL host (no code change needed). Free web services sleep after 15 minutes.
 - **Children's privacy.** Collecting no personal data keeps this simple, but if the game targets children in a country with child-data laws (for example India's DPDP Act or US COPPA), get legal advice before launch.
 - **Losing every passkey and every recovery code means losing the account.** This is the cost of collecting no email; local progress on the device is unaffected.

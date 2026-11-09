@@ -21,7 +21,10 @@ services:
 
 databases:
   - name: deepa-quest-db
-    plan: basic-256mb # free databases are deleted after 30 days
+    # Free for now. Render deletes free databases 30 days after creation (14 more days to upgrade),
+    # with no backups, and allows one free database per account. Before day 30: upgrade this plan,
+    # or point DATABASE_URL at another database (see README, "Moving the database").
+    plan: free
     region: singapore
     postgresMajorVersion: "18" # cannot be changed later
     ipAllowList: [] # no connections from the internet: only the web service, over Render's private network

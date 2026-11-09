@@ -4,6 +4,10 @@ on:
   push:
     branches: [main]
   pull_request:
+  # New vulnerabilities are published even when nothing is pushed: re-check weekly.
+  schedule:
+    - cron: '17 3 * * 1'
+  workflow_dispatch:
 
 permissions:
   contents: read
