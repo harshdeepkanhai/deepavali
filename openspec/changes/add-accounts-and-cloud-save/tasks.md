@@ -25,9 +25,9 @@
 
 ## 4. Cloud save and deletion
 
-- [ ] 4.1 `GET/PUT /api/progress` with allow-listed level ids and best-score merge
-- [ ] 4.2 Account deletion removing every row for the account
-- [ ] 4.3 Verify: end-to-end test of merge, tampered input and deletion
+- [x] 4.1 `GET/PUT /api/progress` with allow-listed level ids and best-score merge
+- [x] 4.2 Account deletion removing every row for the account
+- [x] 4.3 Verify: end-to-end test of merge, tampered input and deletion
 
 ## 5. Game client
 

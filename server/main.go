@@ -31,6 +31,7 @@ func newApp(cfg config, log *slog.Logger, db *pgxpool.Pool) (*app, error) {
 		return nil, err
 	}
 	a.authRoutes()
+	a.progressRoutes()
 	return a, nil
 }
 

@@ -113,6 +113,31 @@ const PAGE_HELPERS = () => {
     const tamper = await T('call', 'POST', '/api/recover', { code: codes[1], extra: true });
     check('unknown JSON fields are rejected', tamper.status === 400 && tamper.body.error === 'bad_request');
 
+    // ---- cloud save ----
+    await T('call', 'POST', '/api/recover', { code: codes[2] });
+    const put = b => T('call', 'PUT', '/api/progress', b);
+    let pr = await put({ stars: { ayodhya: 1, nepal: 2 } });
+    pr = await put({ stars: { ayodhya: 3 } });
+    pr = await put({ stars: { ayodhya: 1 } });
+    check('best-score merge never lowers stars', pr.status === 200 && pr.body.stars.ayodhya === 3 && pr.body.stars.nepal === 2, JSON.stringify(pr));
+    const bad1 = await put({ stars: { ayodhya: 99 } }), bad2 = await put({ stars: { atlantis: 1 } }), bad3 = await put({ stars: { ayodhya: 2.5 } });
+    const after = await T('call', 'GET', '/api/progress');
+    check('tampered progress is rejected and nothing changes', [bad1, bad2, bad3].every(b => b.status === 400) && after.body.stars.ayodhya === 3 && Object.keys(after.body.stars).length === 2, JSON.stringify(after));
+    await page.goto(ORIGIN + '/?debug');
+    await page.evaluate(PAGE_HELPERS);
+    const allIds = await page.evaluate(() => window.DQ.LV.map(l => l.id));
+    const full = await put({ stars: Object.fromEntries(allIds.map(id => [id, 3])) });
+    check('server accepts every level id the game uses', full.status === 200 && Object.keys(full.body.stars).length === allIds.length, JSON.stringify(full));
+    // ---- deletion ----
+    const del0 = await T('call', 'POST', '/api/account/delete', {});
+    const del = await T('call', 'POST', '/api/account/delete', { confirm: 'delete' });
+    check('account deletion needs explicit confirmation', del0.status === 400 && del.status === 204, `${del0.status}/${del.status}`);
+    check('deleted account is signed out', (await T('call', 'GET', '/api/me')).status === 401);
+    const ghost = await T('signIn');
+    check('deleted account cannot sign in with its old passkey', ghost.status === 400, JSON.stringify(ghost));
+    const recGone = await T('call', 'POST', '/api/recover', { code: codes[3] });
+    check('deleted account recovery codes are gone', recGone.status === 400);
+
     let limited = false;
     for (let i = 0; i < 12 && !limited; i++) limited = (await T('call', 'POST', '/api/recover', { code: 'AAAA-AAAA-AAAA-AAAA' })).status === 429;
     check('recovery attempts are rate limited', limited);

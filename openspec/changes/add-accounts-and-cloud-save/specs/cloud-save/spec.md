@@ -1,7 +1,7 @@
 # Spec Delta
 
 ## Purpose
-Keeping a signed-in player's stars and settings in their account so progress survives cleared browsers and new devices, while guest play stays fully local.
+Keeping a signed-in player's stars in their account so progress survives cleared browsers and new devices, while guest play stays fully local. Settings such as sound, language and text size stay on each device.
 
 ## ADDED Requirements
 
@@ -27,7 +27,7 @@ A signed-in device SHALL sync on sign-in and after each result card, and a faile
 - **THEN** the stars are saved locally and sent at the next successful sync
 
 ### Requirement: Validated progress
-The server SHALL accept only known level ids with star values from 0 to 3 and known settings, and SHALL reject anything else without storing it.
+The server SHALL accept only known level ids with whole-number star values from 0 to 3, and SHALL reject anything else without storing it.
 
 #### Scenario: Tampered request
 - **WHEN** a request claims 99 stars or an unknown level id
