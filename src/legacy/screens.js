@@ -22,11 +22,13 @@ export function show(id){$$('.scr').forEach(s=>s.classList.toggle('on',s.id===id
 /* 3D journey (src/world/): optional and lazily loaded. The 2D map always renders first, and is
    used whenever WebGL is missing, the device is too slow, or the player turns 3D off. */
 const Q=new URLSearchParams(location.search),FORCE3D=Q.has('debug')&&Q.get('g3d')==='1',FORCE2D=Q.has('debug')&&Q.get('g3d')==='0';
-let webgl=null,world=null,worldMod=null,gameToken=0;
-export function use3D(){if(FORCE2D)return false;if(FORCE3D)return true;if(save.lite)return false;
- if(webgl===null){try{const c=document.createElement('canvas');webgl=!!(c.getContext('webgl2')||c.getContext('webgl'))}catch(e){webgl=false}}return webgl}
+let webgl=null,world=null,worldMod=null,gameToken=0,noGPU=false;
+export function use3D(){if(FORCE2D||noGPU)return false;if(FORCE3D)return true;if(save.lite)return false;
+ if(webgl===null){try{const g=document.createElement('canvas').getContext('webgl2'),x=g&&g.getExtension('WEBGL_lose_context');webgl=!!g;if(x)x.loseContext()}catch(e){webgl=false}}return webgl}
 const worldOn=()=>document.documentElement.classList.contains('w3on');
 function fallback2D(){if(world)world.off();if(!save.lite){save.lite=true;persist();toast(t('g3dOff'))}if(screen==='s-map')renderMap()}
+/* The browser took the GPU away and did not give it back: 2D for this visit, the setting stays on. */
+function gpuLost(){noGPU=true;if(world)world.off();if(screen==='s-map')renderMap()}
 function showWorld(reach,ju){
  (worldMod||(worldMod=import('../world/platformer'))).then(m=>{if(screen!=='s-map'||!use3D())return;
   try{world=world||m.createWorld(LV.map(l=>({id:l.id,icon:l.icon,color:l.color})))}catch(e){fallback2D();return}
@@ -34,7 +36,7 @@ function showWorld(reach,ju){
    cur:reach,justUnlocked:ju,total:`${totalStars()}/${LV.length*3}`,lit:save.lit||{},reduced:RM,force:FORCE3D,
    labels:{play:t('playB'),jump:t('jump'),map:t('map'),album:t('album'),settings:t('settings'),home:t('home'),lit:t('lit'),rotate:t('rotate'),close:t('close')},
    busy:()=>$('#modal').classList.contains('on'),
-   onOpen:i=>{sfx.tap();openStory(LV[i],i)},onLocked:()=>{sfx.bad();buzz(60);toast(ic('lock')+t('locked'))},onSlow:fallback2D,
+   onOpen:i=>{sfx.tap();openStory(LV[i],i)},onLocked:()=>{sfx.bad();buzz(60);toast(ic('lock')+t('locked'))},onSlow:fallback2D,onLost:gpuLost,
    onLit:(id,mask)=>{(save.lit||(save.lit={}))[id]=mask;persist()},
    onMap:travel,onAlbum:()=>{sfx.tap();goAlbum('map')},onSettings:()=>{sfx.tap();settings()},onHome:()=>{sfx.tap();goTitle()}})
  }).catch(()=>{})}

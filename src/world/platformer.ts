@@ -31,7 +31,8 @@ export interface WorldData {
   busy(): boolean;          // a menu covers the world
   onOpen(i: number): void;
   onLocked(): void;
-  onSlow(): void;
+  onSlow(): void;           // too slow even at the lowest resolution: 2D from now on
+  onLost(): void;           // the GPU was taken away and not given back: 2D for this visit
   onLit(id: string, mask: number): void;
   onMap(): void;
   onAlbum(): void;
@@ -679,7 +680,12 @@ export function createWorld(info: PlaceInfo[]): World {
     raf = requestAnimationFrame(frame);
     const ms = now - last;
     last = now;
-    if (!active || !d || d.busy()) return;
+    if (!active || !d) return;
+    if (lostAt) {
+      if (now - lostAt > 5000) { lostAt = 0; d.onLost(); }
+      return;
+    }
+    if (d.busy()) return;
     const dt = Math.min(0.05, ms / 1000);
     clock += dt;
     if (!dropping && !respawning) step(dt, clock);
@@ -707,8 +713,16 @@ export function createWorld(info: PlaceInfo[]): World {
     if (!document.fullscreenElement && de.requestFullscreen) de.requestFullscreen({ navigationUI: 'hide' }).then(lock, () => {});
     else lock();
   };
-  const onVisible = () => { if (!document.hidden) last = performance.now(); };
-  cv.addEventListener('webglcontextlost', e => { e.preventDefault(); d?.onSlow(); });
+  const onVisible = () => {
+    if (document.hidden) return;
+    last = performance.now();
+    if (lostAt) lostAt = last; // the wait for the GPU counts only while the page is visible
+  };
+  // Phones take the GPU away under memory pressure, often while the game is in the background.
+  // That says nothing about speed: pause, and let three.js rebuild everything when it comes back.
+  let lostAt = 0;
+  cv.addEventListener('webglcontextlost', e => { e.preventDefault(); lostAt = performance.now() || 1; probing = false; });
+  cv.addEventListener('webglcontextrestored', () => { lostAt = 0; last = performance.now(); });
 
   return {
     show(nd) {
