@@ -15,8 +15,8 @@
 - [x] 2.5 Diyas to light, counted per place and saved as a bitmask
 - [x] 2.6 HUD (place, stars, diyas, map, album, settings, home), fast travel, bridge building after a first win, landscape and fullscreen request, rotate hint
 - [x] 2.7 Verify: smoke test moves, jumps, lights a diya, fast-travels, opens a story from a circle and sees a gate open, in landscape, with no console errors
-- [ ] 2.8 Losing the GPU: pause, resume when the context is restored, 2D for this visit if it is not, never turn the setting off; check for WebGL 2
-- [ ] 2.9 Verify: smoke test loses and restores the context and keeps walking, then loses it for good and gets the 2D map with 3D still on
+- [x] 2.8 Losing the GPU: pause, resume when the context is restored, 2D for this visit if it is not, never turn the setting off; check for WebGL 2
+- [x] 2.9 Verify: smoke test loses and restores the context and keeps walking, then loses it for good and gets the 2D map with 3D still on
 
 ## 3. 3D runner
 

@@ -202,6 +202,20 @@ async function world3d() {
     if (SHOTS) await page.screenshot({ path: path.join(SHOTS, '3d-runner.png') });
     await page.evaluate(() => { const D = window.DQ; D.G.reset(); D.goMap(); });
     await page.waitForTimeout(500);
+
+    // The browser takes the GPU away and gives it back: the walk goes on.
+    await page.evaluate(() => { window.__gl = document.querySelector('.w3d canvas').getContext('webgl2').getExtension('WEBGL_lose_context'); window.__gl.loseContext(); });
+    await page.waitForTimeout(600);
+    await page.evaluate(() => window.__gl.restoreContext());
+    await page.waitForTimeout(800);
+    s = await st();
+    await page.keyboard.down('KeyW'); await page.waitForTimeout(500); await page.keyboard.up('KeyW');
+    s2 = await st();
+    if (Math.hypot(s2.x - s.x, s2.z - s.z) < 0.5 || !(await page.evaluate(() => document.documentElement.classList.contains('w3on')))) fail.push('3D: the journey did not resume after the GPU came back');
+    // It stays away: the 2D map for this visit, and the 3D world setting stays on.
+    await page.evaluate(() => window.__gl.loseContext());
+    if (!(await settle(() => !document.documentElement.classList.contains('w3on') && document.querySelector('#s-map.on .node'), 9000))) fail.push('3D: no 2D map after the GPU was lost for good');
+    if (await page.evaluate(() => window.DQ.save.lite)) fail.push('3D: losing the GPU turned the 3D world setting off');
     if (errors.length) fail.push(`3D errors: ${errors.join(' | ')}`);
   } finally {
     await b.close();
