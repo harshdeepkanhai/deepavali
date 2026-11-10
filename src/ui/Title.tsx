@@ -22,9 +22,11 @@ export function Title(props: TitleActions) {
     <>
       <div class="sky" />
       <div class="tc">
-        <div class="hero"><Icon name="diya" /></div>
-        <h1 class="logo">Deepa Quest</h1>
-        <p class="tag">{tr('tag')}</p>
+        <div class="tbrand">
+          <div class="hero"><Icon name="diya" /></div>
+          <h1 class="logo">Deepa Quest</h1>
+          <p class="tag">{tr('tag')}</p>
+        </div>
         <div class="stack">
           <button class="btn pri" id="tp" onClick={props.onPlay}>
             <Icon name="play" />{tr(started() ? 'cont' : 'begin')}
