@@ -40,7 +40,7 @@ svg.i{width:1.25em;height:1.25em;flex:none;display:inline-block;vertical-align:-
 .sky{position:absolute;inset:0;pointer-events:none;background-image:radial-gradient(1.6px 1.6px at 12% 18%,#fff,transparent),radial-gradient(1.2px 1.2px at 78% 12%,#fff,transparent),radial-gradient(1.4px 1.4px at 42% 28%,#fffa,transparent),radial-gradient(1.2px 1.2px at 88% 38%,#fff,transparent),radial-gradient(1.6px 1.6px at 22% 46%,#fffa,transparent),radial-gradient(1.2px 1.2px at 64% 8%,#fff,transparent),radial-gradient(1.3px 1.3px at 6% 64%,#fff8,transparent),radial-gradient(1.3px 1.3px at 94% 70%,#fff8,transparent);animation:tw 3s ease-in-out infinite alternate}
 @keyframes tw{to{opacity:.4}}
 .tc{position:relative;width:100%;max-width:340px;display:flex;flex-direction:column;align-items:center}
-.tbrand{display:contents}
+.tbrand,.ci,.cr{display:contents}
 .logo{font-size:clamp(2.2rem,11vw,3rem);font-weight:900;letter-spacing:-1px;margin-top:10px;background:linear-gradient(180deg,#fff3c4,#ffb22e 55%,#ff6a00);-webkit-background-clip:text;background-clip:text;color:transparent}
 .tag{color:var(--mu);margin:4px 0 26px;line-height:1.4}
 .foot{margin-top:20px;font-size:.78rem;color:var(--mu)}
@@ -303,7 +303,6 @@ html.w3on #app .modal.on{pointer-events:auto}
 .tv .btn{justify-content:flex-start;text-align:left;min-height:48px}
 .tv .btn span{flex:1}
 .tv .btn.off{opacity:.55}
-@media (orientation:landscape) and (max-height:540px){.tv{grid-template-columns:1fr 1fr}}
 @media (max-width:560px){.w3-pn,.w3-ps{display:none}.w3-place{padding-right:4px}.w3-top{gap:4px}}
 @media (prefers-reduced-motion:reduce){.w3-ph .i,.w3-act{animation:none}}
 /* Landscape: phones held sideways and short windows use the whole screen
@@ -356,6 +355,24 @@ html.w3on #app .modal.on{pointer-events:auto}
  .mgr{grid-template-columns:repeat(6,minmax(0,1fr));width:min(94%,calc((100dvh - var(--hud) - 67px) * 3 + 40px))}
  .mcd{aspect-ratio:1}
  .mm .why{margin-top:0;min-height:2.4em}
+ /* menus: buttons in columns; result, finale and lamp card in two columns */
+ .modal{padding:10px 16px}
+ .mcard{max-width:min(92vw,640px);padding:16px 18px 14px}
+ .mcard .rt{font-size:1.4rem}
+ .mcard .hero .i{width:72px;height:72px}
+ .mcard .stack{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(180px,100%),1fr));gap:8px}
+ .mcard .stack>.pri,.mcard .stack>.row,.mcard .stack>.ghost{grid-column:1/-1}
+ .mcard .btn{min-height:46px}
+ .mcard.info{max-width:min(94vw,780px);display:flex;align-items:center;gap:24px}
+ .mcard.info>.ci{flex:0 1 38%;min-width:0;display:flex;flex-direction:column;align-items:center}
+ .mcard.info>.cr{flex:1 1 62%;min-width:0;display:block}
+ .mcard.info .stack{display:flex;flex-direction:column}
+ .mcard.info .stack.two{flex-direction:row}
+ .mcard.info .rf{margin:6px 0 10px}
+ .cr>.fc{margin-top:0}
+ .tv{grid-template-columns:1fr 1fr}
+ /* album */
+ .ag{grid-template-columns:repeat(6,minmax(0,1fr))}
 }
 /* account */
 #s-account{background:linear-gradient(180deg,#1d1036,#0b0614)}

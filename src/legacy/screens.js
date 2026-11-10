@@ -142,17 +142,17 @@ export function showResult(L,i,res){
  const prev=save.stars[L.id]||0,win=res.stars>0,first=win&&!prev,last=i===LV.length-1,x=X(L,cur.lg),nx=LV[i+1];
  if(win&&res.stars>prev){save.stars[L.id]=res.stars;persist();syncSoon()}
  if(first&&!last)justUnlocked=i+1;
- modal(`<div class="mcard"><div class="rt">${win?t('win'):t('close2')}</div><div class="rst">${ic('star')}${ic('star')}${ic('star')}</div><div class="rl">${res.line}</div>
+ modal(`<div class="mcard info"><div class="ci"><div class="rt">${win?t('win'):t('close2')}</div><div class="rst">${ic('star')}${ic('star')}${ic('star')}</div><div class="rl">${res.line}</div></div><div class="cr">
  ${win?`<div class="fc"><span class="fe">${ic(L.card[0])}</span><div><h4>${first?`<em>${t('newCard')}</em>`:''}${x.c[0]}</h4><p>${x.c[1]}</p></div></div>${first&&nx?`<p class="unl">${ic('sparkle')}${t('unl',{n:nameOf(nx)})}</p>`:''}`:`<p class="rf">${t('fail')}</p>`}
  <div class="stack">${win?`<button class="btn pri" id="rn">${last?ic('globe')+t('lightWorld'):t('cont')+ic('fwd')}</button><div class="row"><button class="btn" id="rr">${ic('restart')}${t('replay')}</button><button class="btn" id="rm">${ic('map')}${t('map')}</button></div>`
- :`<button class="btn pri" id="rr">${ic('restart')}${t('again')}</button><div class="row"><button class="btn" id="rs">${ic('book')}${t('story')}</button><button class="btn" id="rm">${ic('map')}${t('map')}</button></div>`}</div></div>`,goMap);
+ :`<button class="btn pri" id="rr">${ic('restart')}${t('again')}</button><div class="row"><button class="btn" id="rs">${ic('book')}${t('story')}</button><button class="btn" id="rm">${ic('map')}${t('map')}</button></div>`}</div></div></div>`,goMap);
  $$('#modal .rst .i').forEach((s,k)=>{if(k<res.stars)setTimeout(()=>{s.classList.add('on');sfx.star(k);buzz(25)},400+k*350)});
  if(win)setTimeout(()=>{sfx.win();confetti()},250);else sfx.bad();
  $('#rr').onclick=()=>startGame(L,i);$('#rm').onclick=goMap;
  if(win)$('#rn').onclick=()=>last?finale():goMap();else $('#rs').onclick=()=>openStory(L,i);
 }
 export function finale(){G.reset();setTL(save.lang);show('s-map');renderMap();const t0=totalStars();
- modal(`<div class="mcard"><div class="hero">${ic('globe')}</div><div class="rt">${t('worldLit')}</div><p class="rf">${t('fin1')}</p><p class="rf"><b>${t('fin2')}</b></p><div class="hap">${Object.keys(LN).map(l=>`<span lang="${l}">${U[l].happy}</span>`).join('<span>·</span>')}</div><div class="rl">${stars(3)} ${t0}/${LV.length*3} ${t('starsW')}</div><div class="stack"><button class="btn pri" id="fs" data-nofs>${ic('share')}${t('share')}</button><button class="btn" id="fm">${ic('map')}${t('backMap')}</button></div></div>`,closeModal);
+ modal(`<div class="mcard info"><div class="ci"><div class="hero">${ic('globe')}</div><div class="rt">${t('worldLit')}</div></div><div class="cr"><p class="rf">${t('fin1')}</p><p class="rf"><b>${t('fin2')}</b></p><div class="hap">${Object.keys(LN).map(l=>`<span lang="${l}">${U[l].happy}</span>`).join('<span>·</span>')}</div><div class="rl">${stars(3)} ${t0}/${LV.length*3} ${t('starsW')}</div><div class="stack two"><button class="btn pri" id="fs" data-nofs>${ic('share')}${t('share')}</button><button class="btn" id="fm">${ic('map')}${t('backMap')}</button></div></div></div>`,closeModal);
  sfx.win();confetti();if(!RM){setTimeout(confetti,900);setTimeout(confetti,1800)}
  $('#fs').onclick=()=>share(t0);$('#fm').onclick=closeModal;
 }
@@ -161,7 +161,7 @@ export function goAlbum(from){G.reset();closeModal();setTL(save.lang);albumBack=
  $('#ab').onclick=()=>albumBack==='title'?goTitle():goMap();
  $('.ag',S).onclick=e=>{const b=e.target.closest('.ac');if(!b)return;const i=+b.dataset.i,l=LV[i];
   if(!(save.stars[l.id]>0)){sfx.bad();toast(ic('lock')+t('notYet'));return}sfx.tap();const lg=lgOf(l),x=X(l,lg);
-  modal(`<div class="mcard" lang="${lg}"><div class="hero" style="animation:none">${ic(l.card[0])}</div><div class="rt" style="font-size:1.35rem">${x.c[0]}</div><div class="rl">${ic('pin')} ${x.w}</div><p class="rf">${x.c[1]}</p><div class="stack" lang="${save.lang}"><button class="btn pri" id="cp">${ic('play')}${t('replayP',{n:nameOf(l)})}</button><button class="btn" id="cc">${t('close')}</button></div></div>`,closeModal);
+  modal(`<div class="mcard info" lang="${lg}"><div class="ci"><div class="hero" style="animation:none">${ic(l.card[0])}</div><div class="rt" style="font-size:1.35rem">${x.c[0]}</div><div class="rl">${ic('pin')} ${x.w}</div></div><div class="cr"><p class="rf">${x.c[1]}</p><div class="stack two" lang="${save.lang}"><button class="btn pri" id="cp">${ic('play')}${t('replayP',{n:nameOf(l)})}</button><button class="btn" id="cc">${t('close')}</button></div></div></div>`,closeModal);
   $('#cp').onclick=()=>openStory(l,i);$('#cc').onclick=closeModal};
 }
 export function settings(){setTL(save.lang);modal(`<div class="mcard"><div class="rt">${t('settings')}</div><div class="stack" style="margin-top:16px">
