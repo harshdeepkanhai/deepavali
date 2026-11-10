@@ -20,7 +20,7 @@
 
 ## 4. Switching versions
 
-- [ ] 4.1 `pwa/sw.js` keeps the previous version's cache and answers from it when the current one misses
-- [ ] 4.2 A new version switches in at once on the title screen or 2D map, otherwise the next time the player goes to either; the same screen opens again
-- [ ] 4.3 Verify: smoke test publishes new versions and sees the title switch, a level left alone, the map switch and reopen, and two versions kept
-- [ ] 4.4 README: when updates arrive
+- [x] 4.1 `pwa/sw.js` keeps the previous version's cache and answers from it when the current one misses
+- [x] 4.2 A new version switches in at once on the title screen or 2D map, otherwise the next time the player goes to either; the same screen opens again
+- [x] 4.3 Verify: smoke test publishes new versions and sees the title switch, a level left alone, the map switch and reopen, and two versions kept
+- [x] 4.4 README: when updates arrive

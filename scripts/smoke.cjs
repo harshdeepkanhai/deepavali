@@ -8,6 +8,7 @@
  */
 const { spawn } = require('node:child_process');
 const fs = require('node:fs');
+const http = require('node:http');
 const os = require('node:os');
 const path = require('node:path');
 const { chromium } = require('playwright');
@@ -77,6 +78,56 @@ async function offlineAndInstall() {
     if (!cached.includes('/') || cached.some(p => p.startsWith('/api/'))) fail.push(`unexpected offline cache: ${cached.join(', ')}`);
   } finally {
     await ctx.close();
+    fs.rmSync(profile, { recursive: true, force: true });
+  }
+}
+
+// New versions reach an open game: at once on the title screen; mid-level only when the player goes
+// to the map, which then opens again. The previous version's files stay on the device. A small server
+// stands in for a deploy by changing the version in sw.js (browsers fetch it themselves, so a test
+// route cannot change it).
+async function newVersions() {
+  const dist = path.join(root, 'dist'), types = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.webmanifest': 'application/manifest+json', '.png': 'image/png' };
+  let version = '';
+  const server = http.createServer((req, res) => {
+    const p = new globalThis.URL(req.url, 'http://x').pathname, f = path.join(dist, p.endsWith('/') ? p + 'index.html' : p);
+    if (!f.startsWith(dist + path.sep) || !fs.existsSync(f)) { res.writeHead(404); res.end(); return; }
+    let body = fs.readFileSync(f);
+    if (p === '/sw.js') body = Buffer.from(String(body).replace(/(const VERSION = '[^']*)/, '$1' + version));
+    res.writeHead(200, { 'content-type': types[path.extname(f)] || 'application/octet-stream', 'cache-control': 'no-cache' });
+    res.end(body);
+  });
+  await new Promise(r => server.listen(PORT + 1, r));
+  const profile = fs.mkdtempSync(path.join(os.tmpdir(), 'dq-upd-'));
+  const ctx = await chromium.launchPersistentContext(profile, { viewport: { width: 375, height: 667 } });
+  try {
+    const page = ctx.pages()[0] || await ctx.newPage();
+    const errors = [];
+    page.on('pageerror', e => errors.push(e.message));
+    await page.goto(`http://localhost:${PORT + 1}/?debug&g3d=0`);
+    await page.evaluate(() => navigator.serviceWorker.ready.then(() => true));
+    await page.reload();
+    await page.waitForSelector('#tp');
+    const deploy = async v => { version = v; await page.evaluate(() => navigator.serviceWorker.getRegistration().then(r => r.update())).catch(() => { /* switched while asking */ }); };
+    const switched = () => page.waitForFunction(() => !window.__old && window.DQ, null, { timeout: 10000 }).then(() => true, () => false);
+
+    await page.evaluate(() => { window.__old = 1; });
+    await deploy('b');
+    if (!(await switched())) fail.push('update: the title screen did not switch to the new version');
+
+    await page.evaluate(() => { window.__old = 1; const D = window.DQ; D.save.seen = true; D.persist(); D.openStory(D.LV[0], 0); D.startGame(D.LV[0], 0); });
+    await deploy('c');
+    await page.waitForTimeout(2500);
+    if (!(await page.evaluate(() => window.__old === 1 && window.DQ.cur().L.id === 'ayodhya' && document.querySelector('#s-game.on')))) fail.push('update: a level was interrupted');
+    await page.evaluate(() => { const D = window.DQ; D.G.reset(); D.goMap(); }).catch(() => { /* the page reloads */ });
+    if (!(await switched())) fail.push('update: going to the map did not switch to the new version');
+    else if (!(await page.waitForSelector('#s-map.on', { timeout: 5000 }).then(() => true, () => false))) fail.push('update: the map did not open again after switching');
+    const kept = await page.evaluate(() => caches.keys());
+    if (kept.length !== 2) fail.push(`update: expected the current and previous versions on the device, found ${kept.length}`);
+    if (errors.length) fail.push(`update errors: ${errors.join(' | ')}`);
+  } finally {
+    await ctx.close();
+    server.close();
     fs.rmSync(profile, { recursive: true, force: true });
   }
 }
@@ -231,8 +282,9 @@ async function world3d() {
     fail.push(...report, ...errs.map(e => 'console: ' + e));
     await browser.close();
     await offlineAndInstall();
+    await newVersions();
     await world3d();
   } finally { server.kill(); }
   if (fail.length) { console.error('SMOKE FAILED\n- ' + fail.join('\n- ')); process.exit(1); }
-  console.log('Smoke test passed: 13 levels, 8 languages, pause, auto-pause, translations, offline play, instant reloads, installable, 3D journey and runner, no emoji, no console errors.');
+  console.log('Smoke test passed: 13 levels, 8 languages, pause, auto-pause, translations, offline play, instant reloads, installable, prompt updates, 3D journey and runner, no emoji, no console errors.');
 })().catch(e => { console.error(e); process.exit(1); });
