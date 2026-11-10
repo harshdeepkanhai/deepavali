@@ -705,14 +705,6 @@ export function createWorld(info: PlaceInfo[]): World {
     if (!d || d.force) return;
     probe.length = 0; probing = true; probeAt = performance.now() + 1500;
   };
-  const askLandscape = () => {
-    if (!matchMedia('(pointer: coarse)').matches) return;
-    const o = screen.orientation as ScreenOrientation & { lock?: (o: string) => Promise<void> };
-    const lock = () => { try { o?.lock?.('landscape').catch(() => {}); } catch { /* not supported */ } };
-    const de = document.documentElement;
-    if (!document.fullscreenElement && de.requestFullscreen) de.requestFullscreen({ navigationUI: 'hide' }).then(lock, () => {});
-    else lock();
-  };
   const onVisible = () => {
     if (document.hidden) return;
     last = performance.now();
@@ -744,8 +736,7 @@ export function createWorld(info: PlaceInfo[]): World {
         first = false;
         spawnAt(nd.justUnlocked > 0 ? nd.justUnlocked - 1 : clamp(nd.cur, 0, N - 1));
         if (!nd.reduced) { dropping = true; drop = 0; pos.y = safe.y + 13; }
-        askLandscape();
-        startProbe();
+        startProbe(); // full screen and landscape come from the tap that opened it (core/fullscreen.js)
       }
       if (nd.justUnlocked > 0) {
         const from = nd.justUnlocked - 1;

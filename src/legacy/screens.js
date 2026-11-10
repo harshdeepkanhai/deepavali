@@ -152,7 +152,7 @@ export function showResult(L,i,res){
  if(win)$('#rn').onclick=()=>last?finale():goMap();else $('#rs').onclick=()=>openStory(L,i);
 }
 export function finale(){G.reset();setTL(save.lang);show('s-map');renderMap();const t0=totalStars();
- modal(`<div class="mcard"><div class="hero">${ic('globe')}</div><div class="rt">${t('worldLit')}</div><p class="rf">${t('fin1')}</p><p class="rf"><b>${t('fin2')}</b></p><div class="hap">${Object.keys(LN).map(l=>`<span lang="${l}">${U[l].happy}</span>`).join('<span>·</span>')}</div><div class="rl">${stars(3)} ${t0}/${LV.length*3} ${t('starsW')}</div><div class="stack"><button class="btn pri" id="fs">${ic('share')}${t('share')}</button><button class="btn" id="fm">${ic('map')}${t('backMap')}</button></div></div>`,closeModal);
+ modal(`<div class="mcard"><div class="hero">${ic('globe')}</div><div class="rt">${t('worldLit')}</div><p class="rf">${t('fin1')}</p><p class="rf"><b>${t('fin2')}</b></p><div class="hap">${Object.keys(LN).map(l=>`<span lang="${l}">${U[l].happy}</span>`).join('<span>·</span>')}</div><div class="rl">${stars(3)} ${t0}/${LV.length*3} ${t('starsW')}</div><div class="stack"><button class="btn pri" id="fs" data-nofs>${ic('share')}${t('share')}</button><button class="btn" id="fm">${ic('map')}${t('backMap')}</button></div></div>`,closeModal);
  sfx.win();confetti();if(!RM){setTimeout(confetti,900);setTimeout(confetti,1800)}
  $('#fs').onclick=()=>share(t0);$('#fm').onclick=closeModal;
 }

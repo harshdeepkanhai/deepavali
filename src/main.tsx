@@ -1,6 +1,7 @@
 import './styles.css';
 import { render } from 'solid-js/web';
 import { mountIcons } from './core/icons.js';
+import { initFullscreen } from './core/fullscreen.js';
 import { boot, goMap, newVersionReady, titleActions } from './legacy/screens.js';
 import { Title } from './ui/Title';
 import { Account } from './ui/Account';
@@ -10,6 +11,7 @@ mountIcons();
 render(() => <Title {...titleActions} />, document.getElementById('s-title')!);
 render(() => <Account onBack={goMap} />, document.getElementById('s-account')!);
 boot();
+initFullscreen();
 
 // Offline play and instant repeat loads (production builds only; see pwa/sw.js).
 if (import.meta.env.PROD && 'serviceWorker' in navigator) {
