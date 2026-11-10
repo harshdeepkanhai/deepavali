@@ -36,6 +36,8 @@ without WebGL, a 2D map. Each place = story panels → mission → one quick min
 10. Level ids are save keys on the device **and** in `server/progress.go` (`levelIDs`). Keep both in sync.
 11. Offline: every build output file except `icons/` is precached as one version by `pwa/sw.js`.
     Never cache `/api/`. Do not add lazily loaded chunks without versioning them the same way.
+    The previous version stays cached for pages still running it; a new version switches in on the
+    title screen or the map (`newVersionReady` in `screens.js`), never mid-story, mid-game or mid-walk.
 12. 3D (`src/world/`): three.js only in lazily loaded chunks, art built in code (or licensed models with
     credits), no weapons or combat, and every level stays playable in 2D (`save.lite`, `?debug&g3d=0`).
 
@@ -75,7 +77,7 @@ src/core/               util, icons (IC, ic, stars, sprite, spr), save, i18n (t,
                         audio (sfx, buzz), fx (particles), clock (G, HUD, pop, flash, shakeEl, makeCanvas)
 src/data/               strings.js (LN, U), levels.js (PRO, LV)
 scripts/smoke.cjs       headless smoke test (guest play with zero /api calls, offline play, installability,
-                        the 3D journey and runner in landscape)
+                        new versions reaching an open game, the 3D journey and runner in landscape, GPU loss)
 pwa/sw.js               service worker template; the build fills in the file list and version
 public/                 manifest.webmanifest and icons/ (rendered from the diya; the only raster images)
 scripts/e2e-accounts.cjs  account and attack tests against the real server
@@ -135,6 +137,8 @@ Breaking change → bump `KEY`.
 - Places are hub islands with a story circle (action button opens the story) and a gate of light that
   opens with the usual unlock rule. Falls return the player to the last checkpoint. Fast travel (map button)
   reaches any unlocked place.
+- 3D turns itself off (`save.lite`, with a notice) only when the device is too slow. A lost WebGL context
+  pauses the journey until it is restored, or uses 2D for that visit only; it never changes the setting.
 - Tests: `?debug&g3d=1` forces 3D (skips the frame-time probe), `?debug&g3d=0` forces 2D;
   `DQ.world().state()` / `.put(x, y, z)` / `.travel(i)` drive the journey.
 

@@ -93,6 +93,9 @@ After that, every push to the branch deploys automatically.
 | The game works, but account buttons say "That did not work" | `PUBLIC_ORIGIN` must match the address bar exactly |
 | The repository is missing in Render | give the Render GitHub app access to it again |
 | First visit after a quiet spell takes about a minute | the free web plan sleeps after 15 idle minutes; returning players still open instantly from the offline cache |
+| A deploy is live but the game looks old | the device opened its saved copy first. Wait a few seconds on the title screen and it switches by itself. Builds from before that switch existed need the app fully closed and reopened (or the page reloaded) once more |
+| Unsure whether a deploy went out | service → **Events**: the newest entry should read **Deploy live** with the commit you merged; a failed build keeps the previous version running |
+| The 3D journey shows as a flat 2D map | **Settings → 3D world** may be off. The game turns it off, with the notice "Simple graphics are on for this device", when a phone is too slow for 3D; turn it back on there |
 
 Costs: everything in the Blueprint is free. **Write down the day you create it:** Render deletes a
 free database 30 days after creation (with 14 more days to upgrade), and free databases have no
