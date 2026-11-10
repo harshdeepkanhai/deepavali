@@ -41,9 +41,11 @@ Recommended: Quaternius or KayKit for characters, Kenney for scenery and boats, 
 
 **9. Landscape.** On touch devices, entering the journey after the Play tap asks for fullscreen and `screen.orientation.lock('landscape')`; browsers that refuse (iPhone Safari, desktop) are fine. While a touch screen is in portrait, a hint asks the player to turn the phone and can be dismissed. The manifest allows any orientation, so installed apps can rotate.
 
-**10. Rendering budget.** Device pixel ratio capped at 1.5, hemisphere and directional light plus Jyoti's point light, flat shading, no shadow maps (a soft blob shadow under the hero), fog, instancing for diyas, and only nearby places drawn. A frame-time probe lowers the resolution step by step (1.5, 1, 0.75) and switches to the 2D map with a notice if the median frame stays above 34 ms. Rendering stops while anything covers the world or the tab is hidden.
+**10. Rendering budget.** Device pixel ratio capped at 1.5, hemisphere and directional light plus Jyoti's point light, flat shading, no shadow maps (a soft blob shadow under the hero), fog, instancing for diyas, and only nearby places drawn. A frame-time probe lowers the resolution step by step (1.5, 1, 0.75) and switches to the 2D map with a notice if the median frame stays above 34 ms. Rendering stops while anything covers the world or the tab is hidden. three.js r163 and later need WebGL 2, so that is what the game checks for.
 
 **11. Testing.** Headless Chromium renders WebGL in software, too slowly for the frame-time probe, so `?debug&g3d=1` forces 3D (skipping the probe) and `?debug&g3d=0` forces 2D. With `?debug`, `window.DQ.world` exposes the hero's state and a teleport for tests.
+
+**12. Losing the GPU.** Phones take the WebGL context away under memory pressure, often while the game is in the background. That says nothing about the device's speed, so it must not turn 3D off for good (the first version did, which could make the journey vanish for a player who only switched apps). The world lets the context be restored (three.js rebuilds every GPU resource from the scene when it is), pauses while it is gone, and carries on where it was. If it is still gone after five seconds of the page being visible, this visit uses the 2D map; the setting is unchanged, so the next launch tries 3D again.
 
 ## Risks / Trade-offs
 

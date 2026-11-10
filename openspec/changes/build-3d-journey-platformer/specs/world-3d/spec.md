@@ -92,11 +92,15 @@ The Kala Pani mini-game SHALL be a three-lane 3D runner with the same goal, timi
 - **THEN** it first lowers its resolution, and then switches to the 2D map with a notice
 
 ### Requirement: 2D fallback
-The game SHALL use the 2D map and 2D games when WebGL is unavailable, when the player turns the "3D world" setting off, or when the device cannot hold 30 frames per second.
+The game SHALL use the 2D map and 2D games when WebGL 2 is unavailable, when the player turns the "3D world" setting off, or when the device cannot hold 30 frames per second. When the browser takes the GPU away (for example while the game is in the background), the journey SHALL resume once it is given back, and losing it SHALL NOT turn the "3D world" setting off.
 
 #### Scenario: Old phone
-- **WHEN** WebGL cannot start
+- **WHEN** WebGL 2 cannot start
 - **THEN** the 2D map appears and every level remains playable
+
+#### Scenario: Back from another app
+- **WHEN** a player returns from another app and the browser had taken the GPU away
+- **THEN** the journey resumes where they were; if the GPU does not come back within a few seconds, the 2D map is used for this visit and the 3D world setting stays on
 
 ### Requirement: Accessible journey
 Every journey control SHALL be a labelled button or area of at least 44 by 44 pixels. With reduced motion requested, the camera SHALL not bob or shake and the intro descent SHALL be skipped.
