@@ -328,6 +328,34 @@ html.w3on #app .modal.on{pointer-events:auto}
  .mis>.mt,.mis>.mx,.mis>.mgoal,.mis>.stack{grid-column:2}
  .mis>.mt{grid-row:2}.mis>.mx{grid-row:3;max-width:none}.mis>.mgoal{grid-row:4;margin:0}
  .mis>.stack{grid-row:5;flex-direction:row;max-width:none!important}
+ /* mini-games: playfields sized by the height, instructions beside them */
+ .sw,.rg,.sm,.lo{display:grid;grid-template-columns:auto minmax(0,300px);grid-template-rows:1fr auto auto auto 1fr;column-gap:clamp(20px,5vw,56px);row-gap:10px;align-items:center;justify-content:center;justify-items:start;padding:10px 24px}
+ .deck{grid-column:1;grid-row:1/-1;width:min(46vw,400px);height:min(calc(100dvh - var(--hud) - 44px),330px);margin-bottom:14px}
+ .swb{grid-column:2;grid-row:2;margin:0}
+ .sw .why{grid-column:2;grid-row:3;margin:0;text-align:left}
+ .rgrid{grid-column:1;grid-row:1/-1;width:min(calc(100dvh - var(--hud) - 20px),400px);gap:3px;padding:6px}
+ .rgt{grid-column:2;grid-row:2}
+ .rhint{grid-column:2;grid-row:3;text-align:left}
+ .rpal{grid-column:2;grid-row:4;justify-content:flex-start}
+ .arch{grid-column:1;grid-row:1/-1;width:min(calc((100dvh - var(--hud) - 24px) * 1.25),340px)}
+ .sm .si,.lo .si{grid-column:2;grid-row:2;text-align:left}
+ .sm .ss{grid-column:2;grid-row:3;text-align:left}
+ .lg{grid-column:1;grid-row:1/-1;width:min(calc(100dvh - var(--hud) - 24px),330px)}
+ .lrow{grid-column:2;grid-row:3;width:100%}
+ .lo .ss{grid-column:2;grid-row:4;text-align:left}
+ .rh{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);grid-template-rows:1fr auto auto 1fr;column-gap:24px;align-items:center;justify-items:center;padding:10px 24px}
+ .rw{grid-column:2;grid-row:1/-1;width:min(calc(100dvh - var(--hud) - 40px),250px)}
+ .l14{grid-column:1;grid-row:2/4;margin:0;max-width:180px}
+ .rj{grid-column:3;grid-row:2;margin:0}
+ .rsub{grid-column:3;grid-row:3;max-width:220px}
+ .qz{max-width:980px;margin:0 auto;gap:8px;padding:8px 24px calc(10px + env(safe-area-inset-bottom))}
+ .qopts{grid-template-columns:repeat(4,minmax(0,1fr))}
+ .qo{min-height:64px}
+ .qq{min-height:2.6em}
+ .mm{gap:8px;padding:8px 16px}
+ .mgr{grid-template-columns:repeat(6,minmax(0,1fr));width:min(94%,calc((100dvh - var(--hud) - 67px) * 3 + 40px))}
+ .mcd{aspect-ratio:1}
+ .mm .why{margin-top:0;min-height:2.4em}
 }
 /* account */
 #s-account{background:linear-gradient(180deg,#1d1036,#0b0614)}
