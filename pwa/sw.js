@@ -13,10 +13,12 @@ self.addEventListener('install', event => {
   );
 });
 
+// Keep the previous version as well: a page still running it may yet load its own lazily loaded
+// files (the 3D journey) before it switches. Older versions go. Caches are listed oldest first.
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys()
-      .then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k))))
+      .then(keys => Promise.all(keys.filter(k => k !== CACHE).slice(0, -1).map(k => caches.delete(k))))
       .then(() => self.clients.claim()),
   );
 });
@@ -37,8 +39,13 @@ self.addEventListener('fetch', event => {
   event.respondWith(fromCache(req, req));
 });
 
-// The cache holds exactly one version of each file, so Vary headers (for example Vary: Origin
-// on module scripts requested in CORS mode) must not cause a miss.
+// The current version answers first, so a page never mixes versions: hashed file names never
+// collide, and the page itself always comes from the current version. A cache holds exactly one
+// version of each file, so Vary headers (for example Vary: Origin on module scripts requested in
+// CORS mode) must not cause a miss.
 function fromCache(key, req) {
-  return caches.open(CACHE).then(cache => cache.match(key, { ignoreVary: true })).then(hit => hit || fetch(req));
+  const opts = { ignoreVary: true };
+  return caches.open(CACHE).then(cache => cache.match(key, opts))
+    .then(hit => hit || caches.match(key, opts))
+    .then(hit => hit || fetch(req));
 }
