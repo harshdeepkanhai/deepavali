@@ -8,7 +8,7 @@ Every launch downloads the game again, and with no network it does not open at a
 
 - A web app manifest (name, icons, any orientation, standalone, theme colours) so Android, desktop and iOS can install the game.
 - A small hand-written service worker. On first visit it stores the whole game shell (page, script, styles, icons, manifest) in one versioned cache. Later launches load from that cache with no download.
-- Atomic updates: a new version downloads in the background and is used from the next launch, so a launch never mixes files from two versions.
+- Atomic, prompt updates: a new version downloads in the background and switches in at the next calm moment (the title screen or the map), and a page never mixes files from two versions.
 - Account and sync requests (`/api/`) always go to the network and are never stored.
 - App icons are PNG files rendered from the existing diya icon, the only raster images in the game.
 
@@ -22,7 +22,7 @@ Save data and level ids are unchanged.
 <!-- none -->
 
 ### Modified Capabilities
-- `delivery`: adds installability, offline play, instant repeat loads, atomic updates and never caching live data.
+- `delivery`: adds installability, offline play, instant repeat loads, atomic and prompt updates, and never caching live data.
 - `visual-assets`: adds app icons rendered from the icon set.
 
 ## Impact

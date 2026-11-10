@@ -16,7 +16,7 @@ The build outputs `index.html`, one hashed script and one hashed stylesheet unde
 
 **2. Build-time file list.** A Vite plugin runs after the build, lists every output file, hashes their contents into a version string, and writes `sw.js` from `pwa/sw.js` with the list and version filled in. Any change to any file changes `sw.js`, which is how browsers detect an update.
 
-**3. One versioned cache, served atomically.** Navigation to the scope root is answered from the cache with the `index.html` stored by the same version as its scripts. Other same-origin GET requests are answered cache-first. `skipWaiting` and `clients.claim` make the new version take over in the background; open pages keep running the code they already loaded, and the next launch is entirely the new version.
+**3. One versioned cache, served atomically.** Navigation to the scope root is answered from the cache with the `index.html` stored by the same version as its scripts. Other same-origin GET requests are answered cache-first. `skipWaiting` and `clients.claim` make the new version take over in the background; open pages keep running the code they already loaded until they switch (decision 7).
 
 **4. Never touched:** `/api/*`, `/up`, `sw.js` itself, unknown page paths (the server's 404 stays the server's), non-GET requests and other origins.
 
@@ -24,8 +24,12 @@ The build outputs `index.html`, one hashed script and one hashed stylesheet unde
 
 **6. Registration** happens after the `load` event in production builds only, so it never competes with the first paint and never caches dev-server files.
 
+**7. Switching to a new version.** Waiting for the next launch was too slow: an installed app on a phone is rarely closed, so players (and the owner, after a deploy) kept seeing the old version. A page that was served by a worker and then sees another worker take over (`controllerchange`) knows a new version is ready. It reloads at once if the player is on the title screen or the 2D map with no dialog open; otherwise it waits until the player next goes to the title screen or the map, and reloads instead of drawing that screen. A session flag reopens the same screen after the reload, with the place unlocked a moment ago, so the map's celebration still plays. The 3D journey is never reloaded while the player is walking in it.
+
+**8. Two versions on the device.** On activation the worker keeps the previous version's cache and deletes older ones. Requests are answered from the current version first, then from any version, so a page still running the previous version can load its lazily loaded files (the 3D journey and runner) until it switches. Each page still gets one version's files: hashed names never collide, and `index.html` always comes from the current version.
+
 ## Risks / Trade-offs
 
-- A deploy reaches players on their second launch after it, not their first. That is the price of never mixing versions.
+- After a deploy, the previous version shows for the few seconds the new one takes to download. That is the price of opening instantly and offline.
 - If a player clears site data, the next launch is a normal online first visit.
-- Old pages that later request an asset deleted by a new deploy would fail; the game has no lazily loaded assets today. The 3D change must keep chapter models versioned the same way.
+- Two versions take about twice the space on the device (about 2.5 MB in total with the 3D files).
