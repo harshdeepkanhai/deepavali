@@ -53,8 +53,10 @@ TEST_DATABASE_URL=postgres://... node ../scripts/e2e-accounts.cjs   # throwaway 
 
 After the first visit the game opens instantly from the device, even with no network, and every
 level plays offline. Android and desktop Chrome offer **Install app**; on iPhone use
-**Share → Add to Home Screen**. New versions download in the background and are used from the
-next launch. Account and sync requests always go to the server and are never cached.
+**Share → Add to Home Screen**. New versions download in the background and switch in a few
+seconds later on the title screen or the map; a story or mini-game is never interrupted. So right
+after a deploy, the first screen you see is still the old version. Account and sync requests
+always go to the server and are never cached.
 
 ## Deploy on Render
 

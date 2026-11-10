@@ -38,6 +38,11 @@ function showWorld(reach,ju){
    onLit:(id,mask)=>{(save.lit||(save.lit={}))[id]=mask;persist()},
    onMap:travel,onAlbum:()=>{sfx.tap();goAlbum('map')},onSettings:()=>{sfx.tap();settings()},onHome:()=>{sfx.tap();goTitle()}})
  }).catch(()=>{})}
+/* New versions (pwa/sw.js, main.tsx): switch at a calm moment, at once on the title screen or the 2D map,
+   otherwise the next time the player goes to either, then open that same screen again. */
+const RESUME='dq-resume';let newVersion=false;
+export function newVersionReady(){newVersion=true;if(!$('#modal').classList.contains('on')&&(screen==='s-title'||(screen==='s-map'&&!worldOn())))switchVersion(screen)}
+function switchVersion(s){if(!newVersion)return false;newVersion=false;try{sessionStorage.setItem(RESUME,JSON.stringify([s,justUnlocked]))}catch(e){}location.reload();return true}
 /* Fast travel: every place, with stars; unlocked ones move the player to their story circle. */
 function travel(){if(!world)return;sfx.tap();setTL(save.lang);
  modal(`<div class="mcard tvc"><div class="rt">${t('map')}</div><div class="tv">${LV.map((l,i)=>{const lk=!unlocked(i),nm=nameOf(l);return`<button class="btn${lk?' off':''}" data-i="${i}" aria-label="${nm}${lk?' · '+t('locked'):''}">${ic(lk?'lock':l.icon)}<span>${nm}</span>${lk?'':stars(save.stars[l.id]||0)}</button>`}).join('')}</div><button class="btn ghost" id="tc">${t('close')}</button></div>`,closeModal);
@@ -50,7 +55,7 @@ export function toast(t){const e=h('div','toast',t);e.setAttribute('role','statu
 export const onOff=(k,v)=>`${t(k)}: <b>${t(v?'on':'off')}</b>`;
 
 /* Title screen is a Solid component (src/ui/Title.tsx); this only shows it. */
-export function goTitle(){G.reset();closeModal();setTL(save.lang);show('s-title');refreshUI()}
+export function goTitle(){if(switchVersion('s-title'))return;G.reset();closeModal();setTL(save.lang);show('s-title');refreshUI()}
 export const titleActions={
  onPlay:()=>{actx();sfx.good();if(!save.seen){save.seen=true;persist();openStory(PRO,-1)}else goMap()},
  onAlbum:()=>goAlbum('title'),
@@ -64,7 +69,7 @@ export function pickLang(back){const ks=Object.keys(LN);
 
 /* Account screen is a Solid component (src/ui/Account.tsx). */
 export function goAccount(){G.reset();closeModal();setTL(save.lang);show('s-account');refreshUI();openAccount()}
-export function goMap(){G.reset();closeModal();setTL(save.lang);show('s-map');renderMap()}
+export function goMap(){if(switchVersion('s-map'))return;G.reset();closeModal();setTL(save.lang);show('s-map');renderMap()}
 export function renderMap(){
  const S=$('#s-map');setTL(save.lang);
  S.innerHTML=`<div class="mhead"><button class="ib" id="mh" aria-label="${t('home')}">${ic('home')}</button><span class="mlogo">${ic('diya')} Deepa Quest</span><span class="chip">${ic('star')}${totalStars()}/${LV.length*3}</span><button class="ib" id="ma" aria-label="${t('album')}">${ic('book')}</button><button class="ib" id="ms" aria-label="${t('settings')}">${ic('sliders')}</button></div><div class="mscroll"><div class="mapw"></div></div>`;
@@ -192,7 +197,9 @@ addEventListener('keydown',e=>{const btn=e.target&&e.target.closest&&e.target.cl
 app.addEventListener('contextmenu',e=>e.preventDefault());
 document.addEventListener('pointerdown',()=>actx(),{once:true});
 $('#g-pause').onclick=pauseMenu;
-setUI();fxSize();goTitle();
+setUI();fxSize();
+ let back=null;try{back=JSON.parse(sessionStorage.getItem(RESUME));sessionStorage.removeItem(RESUME)}catch(e){}
+ if(Array.isArray(back)&&back[0]==='s-map'&&save.seen){justUnlocked=Number.isInteger(back[1])?back[1]:-1;goMap()}else goTitle();
 onStarsChanged(()=>{if(screen==='s-map')renderMap();refreshUI()});syncSoon();
 }
 /* test hook: only with ?debug in the URL */

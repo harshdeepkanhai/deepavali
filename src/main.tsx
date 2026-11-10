@@ -1,7 +1,7 @@
 import './styles.css';
 import { render } from 'solid-js/web';
 import { mountIcons } from './core/icons.js';
-import { boot, goMap, titleActions } from './legacy/screens.js';
+import { boot, goMap, newVersionReady, titleActions } from './legacy/screens.js';
 import { Title } from './ui/Title';
 import { Account } from './ui/Account';
 
@@ -13,7 +13,11 @@ boot();
 
 // Offline play and instant repeat loads (production builds only; see pwa/sw.js).
 if (import.meta.env.PROD && 'serviceWorker' in navigator) {
+  const sw = navigator.serviceWorker;
+  // This page came from the device; another worker taking over means a new version is ready.
+  // (On a first visit the page came from the network and is already the newest.)
+  if (sw.controller) sw.addEventListener('controllerchange', newVersionReady, { once: true });
   addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js').catch(() => { /* the game works without it */ });
+    sw.register('./sw.js').catch(() => { /* the game works without it */ });
   });
 }
