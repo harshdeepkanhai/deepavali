@@ -19,9 +19,11 @@ without WebGL, a 2D map. Each place = story panels → mission → one quick min
    The CSP enforces this: scripts only from our origin, no inline scripts, no `eval`.
 3. **No emoji, anywhere.** Art = the SVG path icon set `IC` (`src/core/icons.js`) + CSS + canvas.
    `npm test` scans the build for emoji.
-4. Mobile first: menus, stories and mini-games are 360–430px portrait first and must work in landscape;
-   the 3D journey is landscape first and full screen. Touch, safe-area insets. Desktop shows a centred
-   phone frame over the 3D world.
+4. Mobile first: menus, stories and mini-games are 360–430px portrait, and full width in landscape
+   (one block in `styles.css`: `(orientation: landscape) and (max-height: 699px)`; check every screen at
+   863×360 and 750×342, nothing cut off). The 3D journey is landscape first. On touch devices a tap puts
+   the game in full screen and landscape (`core/fullscreen.js`; buttons that need the tap themselves get
+   `data-nofs`). Safe-area insets. Taller windows (desktop) show a centred phone frame over the 3D world.
 5. Fast: one animation loop via `G.loop`, canvas sprites cached by `sprite()`/`spr()`, no DOM creation
    inside canvas loops, no Solid re-renders driven by game frames. Budget: ~75 KB gzipped initial.
    The 3D journey runs its own loop and stops whenever a story, game or menu covers it.
@@ -74,10 +76,12 @@ src/world/              3D, lazily loaded: platformer.ts (the journey: physics, 
                         hero.ts, controls.ts (joystick, look, keys), kit.ts (shared pieces), runner.ts (Kala Pani)
 src/game/engines.js     E[type] mini-game engines + field/rel/segDist/keys
 src/core/               util, icons (IC, ic, stars, sprite, spr), save, i18n (t, getTL/setTL, X, lgOf, gcfg),
-                        audio (sfx, buzz), fx (particles), clock (G, HUD, pop, flash, shakeEl, makeCanvas)
+                        audio (sfx, buzz), fx (particles), clock (G, HUD, pop, flash, shakeEl, makeCanvas),
+                        fullscreen (full screen and landscape from taps on touch devices)
 src/data/               strings.js (LN, U), levels.js (PRO, LV)
 scripts/smoke.cjs       headless smoke test (guest play with zero /api calls, offline play, installability,
-                        new versions reaching an open game, the 3D journey and runner in landscape, GPU loss)
+                        new versions reaching an open game, full screen from a tap, every screen held
+                        sideways at two sizes, the 3D journey and runner in landscape, GPU loss)
 pwa/sw.js               service worker template; the build fills in the file list and version
 public/                 manifest.webmanifest and icons/ (rendered from the diya; the only raster images)
 scripts/e2e-accounts.cjs  account and attack tests against the real server

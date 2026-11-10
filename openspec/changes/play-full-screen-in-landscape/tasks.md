@@ -16,5 +16,5 @@
 
 ## 3. Close out
 
-- [ ] 3.1 Update `CLAUDE.md`, `README.md` and `openspec/config.yaml` (landscape rules, iPhone note)
-- [ ] 3.2 Verify: `npm test`, account tests, each commit builds
+- [x] 3.1 Update `CLAUDE.md`, `README.md` and `openspec/config.yaml` (landscape rules, iPhone note)
+- [x] 3.2 Verify: `npm test`, account tests, each commit builds

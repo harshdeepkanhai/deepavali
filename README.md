@@ -15,6 +15,11 @@ No weapons, no fighting, and no lives in the journey: a fall just takes you back
 checkpoint, and the map button takes you to any place you have unlocked. On phones that cannot
 run 3D smoothly, or with "3D world" turned off in Settings, the game uses the 2D map instead.
 
+The whole game is made to be held sideways: on Android, your first tap puts it in full screen and
+turns it to landscape, and every screen (stories, mini-games, results, menus) fills the width. On
+iPhone, Safari cannot hide its bars for a web page, so add the game to the Home Screen
+(**Share → Add to Home Screen**) to play full screen. Held upright, everything still works.
+
 Play as a guest with nothing sent anywhere, or create an account with a passkey (fingerprint,
 face or screen lock: no email, no password) to keep your stars on every device.
 
