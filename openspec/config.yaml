@@ -10,8 +10,9 @@ context: |
   - Eight languages (en, hi, pa, bn, ta, gu, ne, ms); new player-facing text needs all eight
     or an explicit English fallback noted in the change.
   - Save data lives in localStorage key deepa-quest-v2; level ids are save keys and never change.
-  - Menus, stories and mini-games: 360-430px portrait first, and usable in landscape.
-    The 3D journey is landscape first. 44px tap targets, prefers-reduced-motion respected.
+  - Menus, stories and mini-games: 360-430px portrait, and full width in landscape (screens under
+    700px tall). The 3D journey is landscape first; touch devices go full screen in landscape.
+    44px tap targets, prefers-reduced-motion respected.
 
 rules:
   proposal:
