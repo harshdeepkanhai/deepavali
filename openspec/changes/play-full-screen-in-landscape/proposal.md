@@ -41,4 +41,4 @@ Save data and level ids are unchanged.
   - `src/legacy/screens.js`: classes on result, finale and lamp cards, plus a `data-nofs` attribute on the share button.
 - `public/manifest.webmanifest`: `display: fullscreen`, `orientation: landscape`.
 - Smoke test: every screen at two phone landscape sizes, and the full-screen request.
-- Initial download grows by well under 1 KB gzipped.
+- Initial download grows by about 1 KB gzipped, mostly the landscape styles.

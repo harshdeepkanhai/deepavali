@@ -55,4 +55,6 @@ On an emulated touch phone, tapping "Begin the journey" must make the page full 
 
 - **Leaving full screen.** A player who leaves full screen on purpose is returned on their next tap, which can surprise them. That matches what full-screen games do. The system's own back or swipe gesture still works each time.
 - **Small laptop windows** (under 700px tall) now get the wide layout instead of the phone panel. It fits them better than a clipped column.
+- **Rangoli cells** are sized by the height, because the pattern must stay square and fully visible. The 8×8 rangoli's cells are about 35px on an Android phone in full screen, and 28px on the shortest iPhone view in Safari (42px upright). This is a calm puzzle, not a reflex game, so it stays playable, but it is the one control under 44px.
+- **Larger text on the shortest screens** (about 340px tall): the finale, a result and the settings card can need up to about 30px of scrolling inside the card. Nothing is cut off.
 - **Long translations** may wrap more in narrower side columns. Columns use `minmax(0, …)` and text wraps; the smoke test runs every language in portrait, and landscape checks use English.

@@ -28,7 +28,7 @@ Once installed, the game SHALL open full screen in landscape, without browser, s
 - **THEN** it opens in landscape with no bars on screen
 
 ### Requirement: Landscape layouts
-On a screen wider than it is tall and under 700 pixels tall, every screen (title, stories, missions, every mini-game, results, lamp cards, album, account and menus) SHALL use the full width and fit the height, with every control visible without scrolling the page, nothing hidden by notches, and touch targets of at least 44 pixels. Portrait screens and taller windows SHALL keep their current layouts.
+On a screen wider than it is tall and under 700 pixels tall, every screen (title, stories, missions, mini-games, results, lamp cards, album, account and menus) SHALL use the full width and fit the height: no control cut off, no sideways scrolling, nothing under a notch. Long lists (album, travel, account) MAY scroll within their screen. Portrait screens and taller windows SHALL keep their current layouts.
 
 #### Scenario: Title on a phone held sideways
 - **WHEN** the title screen is shown at 863 by 360 pixels
@@ -41,3 +41,10 @@ On a screen wider than it is tall and under 700 pixels tall, every screen (title
 #### Scenario: Result held sideways
 - **WHEN** a result is shown at 863 by 360 pixels
 - **THEN** the stars, the lamp card and the buttons are visible together
+
+### Requirement: Landscape touch targets
+In landscape, touch targets SHALL stay at least 44 pixels, except the rangoli grid's cells, which shrink with the height so the whole pattern stays visible.
+
+#### Scenario: Lights game held sideways
+- **WHEN** the lights game is played at 863 by 360 pixels
+- **THEN** every light and button is at least 44 pixels

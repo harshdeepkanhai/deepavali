@@ -11,7 +11,7 @@ const fs = require('node:fs');
 const http = require('node:http');
 const os = require('node:os');
 const path = require('node:path');
-const { chromium } = require('playwright');
+const { chromium, devices } = require('playwright');
 
 // The main flows pin 2D (g3d=0); world3d() below covers the 3D journey platformer and runner (g3d=1).
 const PORT = 4173, URL = `http://localhost:${PORT}/?debug&g3d=0`, SHOTS = process.env.SHOTS;
@@ -129,6 +129,113 @@ async function newVersions() {
     await ctx.close();
     server.close();
     fs.rmSync(profile, { recursive: true, force: true });
+  }
+}
+
+// Full screen (openspec/changes/play-full-screen-in-landscape): the Play tap on a touch phone enters it,
+// the next tap after leaving it goes back in, the share button is left alone, and a mouse never does.
+async function fullScreen() {
+  const b = await chromium.launch();
+  try {
+    const phone = await (await b.newContext({ ...devices['Pixel 7'] })).newPage();
+    const fs = () => phone.evaluate(() => !!document.fullscreenElement);
+    await phone.goto(URL);
+    await phone.tap('#tp');
+    await phone.waitForTimeout(400);
+    if (!(await fs())) fail.push('full screen: the Play tap on a touch phone did not enter full screen');
+    await phone.evaluate(() => document.exitFullscreen());
+    await phone.waitForTimeout(300);
+    await phone.tap('#sn');
+    await phone.waitForTimeout(400);
+    if (!(await fs())) fail.push('full screen: a tap after leaving full screen did not go back in');
+    await phone.evaluate(() => { document.exitFullscreen(); const D = window.DQ; D.LV.forEach(l => { D.save.stars[l.id] = 3; }); D.finale(); });
+    await phone.waitForTimeout(500);
+    await phone.tap('#fs');
+    await phone.waitForTimeout(300);
+    if (await fs()) fail.push('full screen: the share button asked for full screen');
+    const desk = await (await b.newContext({ viewport: { width: 1280, height: 800 } })).newPage();
+    await desk.goto(URL);
+    await desk.click('#tp');
+    await desk.waitForTimeout(400);
+    if (await desk.evaluate(() => !!document.fullscreenElement)) fail.push('full screen: a mouse click entered full screen');
+  } finally {
+    await b.close();
+  }
+}
+
+// Every screen on a phone held sideways: full width, nothing cut off or scrolling sideways, buttons at least
+// 44px (rangoli cells shrink with the height), and cards and panels fit without scrolling.
+async function landscape() {
+  const probe = () => {
+    const out = [];
+    const inList = el => { for (let p = el.parentElement; p; p = p.parentElement) { const st = getComputedStyle(p); if (/(auto|scroll)/.test(st.overflowY) && p.scrollHeight > p.clientHeight + 1) return true; } return false; };
+    for (const b of document.querySelectorAll('button')) {
+      const r = b.getBoundingClientRect();
+      if (!r.width || getComputedStyle(b).visibility === 'hidden') continue;
+      if (b.closest('#s-map') && document.documentElement.classList.contains('w3on')) continue;
+      const id = b.id || b.className || b.textContent.trim().slice(0, 16);
+      if (!inList(b) && (r.bottom > innerHeight + 1 || r.right > innerWidth + 1 || r.top < -1 || r.left < -1)) out.push(`${id} is cut off`);
+      if ((r.width < 43.5 || r.height < 43.5) && !b.classList.contains('rc')) out.push(`${id} is ${Math.round(r.width)}x${Math.round(r.height)}`);
+    }
+    for (const el of document.querySelectorAll('.mcard:not(.tvc),.stext,.mis,.tc,.sw,.rg,.sm,.lo,.mm,.qz')) {
+      if (el.getBoundingClientRect().width && el.scrollHeight > el.clientHeight + 2) out.push(`${el.className} needs scrolling`);
+    }
+    if (document.documentElement.scrollWidth > innerWidth + 1) out.push('the page scrolls sideways');
+    if (document.getElementById('app').getBoundingClientRect().width < innerWidth - 100) out.push('the game is a narrow column');
+    return out;
+  };
+  const b = await chromium.launch();
+  try {
+    for (const [w, h] of [[863, 360], [844, 390]]) {
+      const page = await (await b.newContext({ viewport: { width: w, height: h } })).newPage();
+      const errors = [];
+      page.on('pageerror', e => errors.push(e.message));
+      const D = (fn, arg) => page.evaluate(fn, arg);
+      const check = async name => { for (const x of await D(probe)) fail.push(`landscape ${w}x${h} ${name}: ${x}`); };
+      await page.goto(URL);
+      await page.waitForTimeout(300);
+      await check('title');
+      if (!(await D(() => { const l = document.querySelector('.tbrand'), r = document.querySelector('#s-title .stack'); return !!l && !!r && l.getBoundingClientRect().right <= r.getBoundingClientRect().left; }))) fail.push(`landscape ${w}x${h} title: the logo is not beside the buttons`);
+      await D(() => { const d = window.DQ; d.save.seen = true; d.persist(); d.openStory(d.LV[1], 1); });
+      await page.waitForTimeout(300);
+      await check('story');
+      await page.click('#sk');
+      await page.waitForTimeout(300);
+      await check('mission');
+      for (let i = 0; i < 13; i++) {
+        await D(i => { const d = window.DQ; d.G.reset(); d.openStory(d.LV[i], i); d.startGame(d.LV[i], i); }, i);
+        await page.waitForTimeout(1200);
+        await check(`game ${i} (${await D(() => window.DQ.cur().L.game.type)})`);
+      }
+      await page.keyboard.press('Escape');
+      await page.waitForTimeout(200);
+      await check('pause');
+      await D(() => { const d = window.DQ; d.closeModal(); d.G.reset(); d.showResult(d.LV[2], 2, { stars: 2, line: 'Well done' }); });
+      await page.waitForTimeout(1200);
+      await check('result');
+      await D(() => { const d = window.DQ; d.G.reset(); d.showResult(d.LV[3], 3, { stars: 0, line: 'So close' }); });
+      await page.waitForTimeout(1200);
+      await check('result, no stars');
+      await D(() => { const d = window.DQ; d.LV.forEach(l => { d.save.stars[l.id] = 3; }); d.G.reset(); d.finale(); });
+      await page.waitForTimeout(500);
+      await check('finale');
+      await D(() => { const d = window.DQ; d.closeModal(); d.goAlbum('map'); });
+      await page.waitForTimeout(300);
+      await check('album');
+      await page.click('.ac');
+      await page.waitForTimeout(400);
+      await check('lamp card');
+      await D(() => { const d = window.DQ; d.closeModal(); d.goMap(); d.settings(); });
+      await page.waitForTimeout(300);
+      await check('settings');
+      await page.click('#xl');
+      await page.waitForTimeout(300);
+      await check('languages');
+      if (errors.length) fail.push(`landscape ${w}x${h} errors: ${errors.join(' | ')}`);
+      await page.context().close();
+    }
+  } finally {
+    await b.close();
   }
 }
 
@@ -297,8 +404,10 @@ async function world3d() {
     await browser.close();
     await offlineAndInstall();
     await newVersions();
+    await fullScreen();
+    await landscape();
     await world3d();
   } finally { server.kill(); }
   if (fail.length) { console.error('SMOKE FAILED\n- ' + fail.join('\n- ')); process.exit(1); }
-  console.log('Smoke test passed: 13 levels, 8 languages, pause, auto-pause, translations, offline play, instant reloads, installable, prompt updates, 3D journey and runner, no emoji, no console errors.');
+  console.log('Smoke test passed: 13 levels, 8 languages, pause, auto-pause, translations, offline play, instant reloads, installable, prompt updates, full screen, landscape layouts, 3D journey and runner, no emoji, no console errors.');
 })().catch(e => { console.error(e); process.exit(1); });
