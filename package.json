@@ -20,7 +20,7 @@
     "three": "0.187.0"
   },
   "devDependencies": {
-    "@fission-ai/openspec": "^1.16.1",
+    "@fission-ai/openspec": "^2.0.0",
     "@types/three": "0.187.0",
     "typescript": "^5.9.3",
     "vite": "^8.3.6",
