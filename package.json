@@ -16,7 +16,7 @@
     "node": ">=20.19"
   },
   "dependencies": {
-    "solid-js": "^1.9.18",
+    "solid-js": "^1.9.19",
     "three": "0.187.0"
   },
   "devDependencies": {
